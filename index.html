@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="タスクRPG" />
-  <title>タスクRPG - 職業別ミッション＆レベルアップ</title>
+  <title>タスクRPG - 職業別＆デイリーミッション</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,9 +16,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <!-- Canvas Confetti for Level Up Celebration -->
+  <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-  <!-- Tone.js for RPG Sound Effects (Web Audio Synthesizer) -->
+  <!-- Tone.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
   <script>
@@ -42,15 +41,19 @@
               emerald: '#10b981',
             }
           },
-          animation: {
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'pop-in': 'popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-          },
           keyframes: {
             popIn: {
               '0%': { opacity: '0', transform: 'scale(0.85) translateY(10px)' },
               '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            },
+            floatAnim: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-4px)' }
             }
+          },
+          animation: {
+            'pop-in': 'popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            'float': 'floatAnim 3s ease-in-out infinite',
           }
         }
       }
@@ -64,8 +67,6 @@
       -webkit-tap-highlight-color: transparent;
       padding-bottom: env(safe-area-inset-bottom);
     }
-
-    /* RPG風の微細なグリッド背景 */
     .bg-guild-pattern {
       background-image: 
         radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
@@ -73,40 +74,26 @@
         linear-gradient(to bottom, rgba(38, 50, 77, 0.25) 1px, transparent 1px);
       background-size: 100% 100%, 32px 32px, 32px 32px;
     }
-
-    /* ゴールドの枠線・光沢エフェクト */
     .gold-glow {
       box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
     }
-
-    /* カスタムスクロールバー */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0b0f19;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #26324d;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #3b4d75;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b0f19; }
+    ::-webkit-scrollbar-thumb { background: #26324d; border-radius: 9999px; }
   </style>
 </head>
 <body class="bg-guild-pattern min-h-screen flex flex-col antialiased selection:bg-amber-500/30 selection:text-amber-200">
 
-  <!-- トップヘッダー（冒険者ステータス＆同期状況） -->
+  <!-- トップヘッダー -->
   <header class="sticky top-0 z-30 bg-guild-bg/90 backdrop-blur-md border-b border-guild-border">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
 
-      <!-- アプリタイトル＆総合ランク -->
+      <!-- アプリタイトル ＆ キャラクターアイコン（左上） -->
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-0.5 shadow-lg shadow-amber-500/20 flex-shrink-0">
-          <div class="w-full h-full bg-guild-bg rounded-[10px] flex items-center justify-center text-amber-400 text-xl">
-            <i class="fa-solid fa-shield-halved"></i>
+        <!-- アニメーション付きキャラアバター -->
+        <div id="header-avatar-box" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-0.5 shadow-lg shadow-amber-500/20 flex-shrink-0 animate-float">
+          <div class="w-full h-full bg-guild-bg rounded-[14px] flex items-center justify-center text-amber-400 text-xl transition-all" id="header-avatar-icon">
+            <i class="fa-solid fa-child"></i>
           </div>
         </div>
         <div>
@@ -115,7 +102,7 @@
               タスクRPG
             </h1>
             <span id="adventurer-rank-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-              見習い冒険者
+              見習い村人
             </span>
           </div>
           <div class="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
@@ -126,24 +113,27 @@
         </div>
       </div>
 
-      <!-- PC用ナビゲーションタブ（デスクトップのみ表示） -->
+      <!-- PC用ナビゲーションタブ -->
       <nav class="hidden md:flex items-center bg-guild-card p-1 rounded-xl border border-guild-border">
-        <button onclick="switchTab('quests')" id="nav-pc-quests" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-amber-500 text-slate-950 shadow">
-          <i class="fa-solid fa-swords mr-1.5"></i>職業・ミッション
+        <button onclick="switchTab('quests')" id="nav-pc-quests" class="pc-nav-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all bg-amber-500 text-slate-950 shadow">
+          <i class="fa-solid fa-swords mr-1"></i>職業クエスト
         </button>
-        <button onclick="switchTab('logs')" id="nav-pc-logs" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all">
-          <i class="fa-solid fa-scroll mr-1.5"></i>達成履歴
+        <button onclick="switchTab('dailies')" id="nav-pc-dailies" class="pc-nav-btn px-3.5 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+          <i class="fa-solid fa-calendar-day mr-1"></i>デイリー
         </button>
-        <button onclick="switchTab('settings')" id="nav-pc-settings" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all">
-          <i class="fa-solid fa-gear mr-1.5"></i>データ同期・設定
+        <button onclick="switchTab('logs')" id="nav-pc-logs" class="pc-nav-btn px-3.5 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+          <i class="fa-solid fa-calendar-alt mr-1"></i>履歴・カレンダー
+        </button>
+        <button onclick="switchTab('settings')" id="nav-pc-settings" class="pc-nav-btn px-3.5 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+          <i class="fa-solid fa-gear mr-1"></i>同期・設定
         </button>
       </nav>
 
-      <!-- クラウド同期ステータス＆アカウントボタン -->
+      <!-- 同期ステータス -->
       <div class="flex items-center gap-2">
         <button onclick="switchTab('settings')" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-guild-card hover:bg-guild-cardHover border border-guild-border transition text-xs">
           <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="sync-status-text" class="text-slate-300 font-medium max-w-[110px] sm:max-w-[160px] truncate">接続確認中...</span>
+          <span id="sync-status-text" class="text-slate-300 font-medium max-w-[100px] truncate">接続確認中...</span>
           <i class="fa-solid fa-cloud text-slate-400"></i>
         </button>
       </div>
@@ -151,44 +141,39 @@
     </div>
   </header>
 
-  <!-- メインコンテンツエリア -->
+  <!-- メインコンテンツ -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 pb-28 md:pb-10">
 
-    <!-- トースト通知エリア（alertの代替） -->
+    <!-- トースト通知エリア -->
     <div id="toast-container" class="fixed top-16 right-4 left-4 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- ========================================== -->
-    <!-- タブ1: 職業（ジャンル）＆ミッション一覧 -->
+    <!-- タブ1: 職業クエスト -->
     <!-- ========================================== -->
     <section id="tab-quests" class="space-y-6">
-      
-      <!-- アクションバー -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-guild-card/80 border border-guild-border rounded-2xl p-4">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-crown text-amber-400"></i>
             <span>ジョブステータス ＆ 受注ミッション</span>
           </h2>
-          <p class="text-xs text-slate-400 mt-0.5">職業ごとに1つのミッションを設定し、達成するとその職業がレベルアップします。</p>
+          <p class="text-xs text-slate-400 mt-0.5">職業ごとにミッションを設定し、達成するとその職業がレベルアップします。</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openJobModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-plus"></i>
-            <span>新しい職業を追加</span>
+            <i class="fa-solid fa-plus"></i><span>新しい職業を追加</span>
           </button>
         </div>
       </div>
 
-      <!-- 初期プリセット案内（職業が0個の時に強調表示） -->
+      <!-- 初期プリセット案内 -->
       <div id="empty-jobs-banner" class="hidden bg-guild-card border-2 border-dashed border-guild-border rounded-2xl p-6 sm:p-8 text-center space-y-4">
         <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl text-amber-400">
           <i class="fa-solid fa-hat-wizard"></i>
         </div>
         <div class="max-w-md mx-auto">
-          <h3 class="text-lg font-bold text-white">まだ職業（ジャンル）が登録されていません</h3>
-          <p class="text-sm text-slate-400 mt-1">
-            まずはあなたの成長させたいジャンルを「職業」として作成するか、下のサンプル職業をワンクリックで追加して冒険を始めましょう！
-          </p>
+          <h3 class="text-lg font-bold text-white">まだ職業が登録されていません</h3>
+          <p class="text-sm text-slate-400 mt-1">サンプル職業を一括追加するか、自分で職業を作って冒険を始めましょう！</p>
         </div>
         <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
           <button onclick="addPresetJobs()" class="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition active:scale-95">
@@ -200,43 +185,113 @@
         </div>
       </div>
 
-      <!-- 職業カードグリッド（スマホ1列 / タブレット2列 / PC3列） -->
-      <div id="jobs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <!-- JSで動的に描画 -->
-      </div>
-
+      <!-- 職業カードグリッド -->
+      <div id="jobs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </section>
 
     <!-- ========================================== -->
-    <!-- タブ2: 達成履歴（クエストログ） -->
+    <!-- タブ2: デイリークエスト（共通レベル制・3回達成でLVUP） -->
     <!-- ========================================== -->
-    <section id="tab-logs" class="hidden space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-guild-card/80 border border-guild-border rounded-2xl p-4">
-        <div>
+    <section id="tab-dailies" class="hidden space-y-6 max-w-4xl mx-auto">
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-guild-border pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-calendar-day text-sky-400"></i>
+              <span>デイリークエスト修行場</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">毎日行う日課を設定しよう！すべてのデイリー達成カウントが累計3回に達するごとに共通レベルがアップします。</p>
+          </div>
+          <!-- デイリー共通レベル＆進捗バッジ -->
+          <div class="bg-guild-bg border border-sky-500/40 rounded-xl px-4 py-2.5 flex items-center gap-3">
+            <div class="text-2xl text-sky-400"><i class="fa-solid fa-shield-heart"></i></div>
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">デイリー共通Lv</div>
+              <div class="font-rpg font-extrabold text-lg text-sky-300" id="daily-level-display">Lv.1</div>
+            </div>
+            <div class="border-l border-guild-border pl-3 ml-1">
+              <div class="text-[10px] font-bold text-slate-400">累計達成</div>
+              <div class="text-sm font-bold text-emerald-400" id="daily-progress-display">0 / 3回</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- デイリー追加フォーム -->
+        <form onsubmit="addDailyTask(event)" class="flex gap-2 pt-1">
+          <input type="text" id="daily-title-input" placeholder="例：プログラミング学習30分、水を1L飲む、ストレッチ..." class="flex-1 bg-guild-bg border border-guild-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/20 transition active:scale-95 whitespace-nowrap">
+            <i class="fa-solid fa-plus mr-1"></i>デイリー追加
+          </button>
+        </form>
+
+        <!-- デイリークエスト一覧 -->
+        <div id="dailies-list" class="space-y-3 pt-2">
+          <!-- JSで動的描画 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- タブ3: 履歴 ＆ カレンダー機能 -->
+    <!-- ========================================== -->
+    <section id="tab-logs" class="hidden space-y-6 max-w-4xl mx-auto">
+      
+      <!-- カレンダーカード -->
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between">
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-scroll text-emerald-400"></i>
-            <span>冒険の記録（達成済みミッション）</span>
+            <i class="fa-solid fa-calendar-alt text-amber-400"></i>
+            <span id="calendar-month-title">2026年 3月 達成カレンダー</span>
           </h2>
-          <p class="text-xs text-slate-400 mt-0.5">これまでにクリアしたミッションとレベルアップの軌跡です。</p>
+          <div class="flex items-center gap-1.5">
+            <button onclick="changeCalendarMonth(-1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button onclick="changeCalendarMonth(1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <select id="log-filter-job" onchange="renderLogs()" class="bg-guild-bg border border-guild-border text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500">
-            <option value="all">すべての職業</option>
-          </select>
+
+        <!-- 曜日ヘッダー -->
+        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 pb-1 border-b border-guild-border">
+          <span class="text-rose-400">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="text-sky-400">土</span>
+        </div>
+
+        <!-- カレンダーの日付グリッド -->
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5">
+          <!-- JSで動的描画 -->
+        </div>
+        <div class="text-[11px] text-slate-400 flex items-center gap-2 pt-1">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span> <span>その日にミッションを達成した日（数字クリックで詳細表示）</span>
         </div>
       </div>
 
-      <div id="logs-list" class="space-y-3">
-        <!-- JSで動的に描画 -->
+      <!-- 達成履歴一覧 -->
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-scroll text-emerald-400"></i>
+              <span>冒険のクエストログ（全達成履歴）</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">職業レベルアップやデイリー達成の全記録です。</p>
+          </div>
+          <div>
+            <select id="log-filter-job" onchange="renderLogs()" class="bg-guild-bg border border-guild-border text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500">
+              <option value="all">すべての履歴</option>
+              <option value="daily">デイリークエストのみ</option>
+            </select>
+          </div>
+        </div>
+        <div id="logs-list" class="space-y-3"></div>
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- タブ3: PC・iPhoneデータ同期 ＆ 設定 -->
+    <!-- タブ4: 設定・同期 -->
     <!-- ========================================== -->
     <section id="tab-settings" class="hidden space-y-6 max-w-3xl mx-auto">
-      
-      <!-- アカウント連携＆リアルタイム同期カード -->
       <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-5">
         <div class="flex items-start justify-between gap-4">
           <div>
@@ -244,16 +299,11 @@
               <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
               <span>PC・iPhone クラウド同期</span>
             </h2>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              同じアカウントでログインすると、iPhoneとPCで職業レベルやミッションがリアルタイムに同期されます。
-            </p>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">同じアカウントでログインすると、iPhoneとPCでデータがリアルタイムに同期されます。</p>
           </div>
-          <span id="auth-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
-            ゲストモード
-          </span>
+          <span id="auth-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">ゲストモード</span>
         </div>
 
-        <!-- 現在のユーザー情報ボックス -->
         <div class="bg-guild-bg/80 border border-guild-border rounded-xl p-4 space-y-2 text-xs sm:text-sm">
           <div class="flex items-center justify-between">
             <span class="text-slate-400">同期ステータス:</span>
@@ -263,75 +313,28 @@
             <span class="text-slate-400">冒険者ID (UID):</span>
             <code id="user-uid-display" class="text-[11px] bg-slate-900 px-2 py-1 rounded text-amber-300 font-mono break-all select-all">---</code>
           </div>
-          <div id="user-email-row" class="hidden flex items-center justify-between">
-            <span class="text-slate-400">連携メールアドレス:</span>
-            <span id="user-email-display" class="font-bold text-white"></span>
-          </div>
         </div>
 
-        <!-- ログイン・アカウント紐づけフォーム（未連携時） -->
         <div id="auth-forms-container" class="space-y-4 pt-2 border-t border-guild-border">
-          <p class="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
-            <i class="fa-solid fa-circle-info mr-1"></i>
-            現在この端末のゲストデータとして保存されています。PCとiPhoneでデータを共有するには、下のボタンからGoogleまたはメールアドレスでログイン（紐づけ）してください。
-          </p>
-
-          <!-- Googleログインボタン -->
           <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm flex items-center justify-center gap-2.5 shadow transition active:scale-95">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5" onerror="this.style.display='none'">
             <span>Googleアカウントで連携・ログイン</span>
           </button>
-
-          <div class="relative flex py-1 items-center">
-            <div class="flex-grow border-t border-guild-border"></div>
-            <span class="flex-shrink mx-3 text-xs text-slate-500">またはメールアドレスで連携</span>
-            <div class="flex-grow border-t border-guild-border"></div>
-          </div>
-
-          <!-- メール＆パスワードフォーム -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input type="email" id="auth-email" placeholder="メールアドレス" class="bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
-            <input type="password" id="auth-password" placeholder="パスワード（6文字以上）" class="bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
-          </div>
-          <div class="flex flex-col sm:flex-row gap-2.5">
-            <button onclick="loginWithEmail()" class="flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm transition active:scale-95">
-              既存アカウントでログイン
-            </button>
-            <button onclick="registerWithEmail()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition active:scale-95">
-              新規アカウント登録（今のデータを引継）
-            </button>
-          </div>
         </div>
 
-        <!-- ログアウトボタン（連携済み時） -->
         <div id="auth-logged-in-actions" class="hidden pt-2 border-t border-guild-border flex justify-end">
           <button onclick="logoutAccount()" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition">
-            <i class="fa-solid fa-right-from-bracket mr-1.5"></i>ログアウト（別のアカウントに切替）
+            <i class="fa-solid fa-right-from-bracket mr-1.5"></i>ログアウト
           </button>
         </div>
       </div>
 
-      <!-- iPhone ホーム画面追加ガイド -->
-      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-3">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-brands fa-apple text-slate-300 text-lg"></i>
-          <span>iPhoneでアプリのように使う方法</span>
-        </h3>
-        <ol class="text-xs sm:text-sm text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
-          <li>iPhoneの <strong>Safari</strong> でこのページを開きます。</li>
-          <li>画面下部の共有ボタン（<i class="fa-solid fa-arrow-up-from-bracket text-sky-400"></i> 四角から上矢印のアイコン）をタップします。</li>
-          <li>メニューを下にスクロールして<strong>「ホーム画面に追加」</strong>をタップします。</li>
-          <li>ホーム画面のアイコンから起動すると、ブラウザの枠がない全画面アプリとして快適に動作します。</li>
-        </ol>
-      </div>
-
-      <!-- サウンド＆JSONバックアップ設定 -->
+      <!-- サウンド＆バックアップ -->
       <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-database text-amber-400"></i>
-          <span>サウンド設定 ＆ データバックアップ</span>
+          <span>サウンド設定 ＆ バックアップ</span>
         </h3>
-
         <div class="flex items-center justify-between py-2 border-b border-guild-border">
           <div>
             <div class="text-sm font-bold text-white">レベルアップ効果音（ファンファーレ）</div>
@@ -339,134 +342,89 @@
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="sound-toggle" checked class="sr-only peer" onchange="toggleSoundSetting()">
-            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            <div class="w-11 h-6 bg-slate-750 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
           </label>
         </div>
-
-        <div class="pt-1 space-y-3">
-          <p class="text-xs text-slate-400">万が一に備えて、全職業と達成履歴をJSONファイルとして保存・復元できます。</p>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="exportDataJSON()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2">
-              <i class="fa-solid fa-download text-amber-400"></i>
-              <span>JSONデータを書き出し</span>
-            </button>
-            <label class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer">
-              <i class="fa-solid fa-upload text-emerald-400"></i>
-              <span>JSONデータを読み込み</span>
-              <input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden" />
-            </label>
-          </div>
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button onclick="exportDataJSON()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-download text-amber-400"></i><span>JSONデータを書き出し</span>
+          </button>
         </div>
       </div>
-
     </section>
+
   </main>
 
   <!-- スマホ用ボトムナビゲーションバー -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-guild-bg/95 backdrop-blur-lg border-t border-guild-border px-2 py-1.5 flex items-center justify-around">
-    <button onclick="switchTab('quests')" id="nav-sp-quests" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-amber-400 font-bold">
-      <i class="fa-solid fa-swords text-lg"></i>
-      <span class="text-[11px]">職業・クエスト</span>
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-guild-bg/95 backdrop-blur-lg border-t border-guild-border px-1 py-1.5 flex items-center justify-around">
+    <button onclick="switchTab('quests')" id="nav-sp-quests" class="sp-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-amber-400 font-bold">
+      <i class="fa-solid fa-swords text-base"></i><span class="text-[10px]">職業</span>
     </button>
-    <button onclick="switchTab('logs')" id="nav-sp-logs" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400">
-      <i class="fa-solid fa-scroll text-lg"></i>
-      <span class="text-[11px]">達成履歴</span>
+    <button onclick="switchTab('dailies')" id="nav-sp-dailies" class="sp-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-400">
+      <i class="fa-solid fa-calendar-day text-base"></i><span class="text-[10px]">デイリー</span>
     </button>
-    <button onclick="switchTab('settings')" id="nav-sp-settings" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400">
-      <i class="fa-solid fa-cloud text-lg"></i>
-      <span class="text-[11px]">同期・設定</span>
+    <button onclick="switchTab('logs')" id="nav-sp-logs" class="sp-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-400">
+      <i class="fa-solid fa-calendar-alt text-base"></i><span class="text-[10px]">履歴・カレンダー</span>
+    </button>
+    <button onclick="switchTab('settings')" id="nav-sp-settings" class="sp-nav-btn flex-1 py-1.5 flex flex-col items-center justify-center gap-0.5 text-slate-400">
+      <i class="fa-solid fa-gear text-base"></i><span class="text-[10px]">設定</span>
     </button>
   </nav>
 
-  <!-- モーダル1: 職業（ジャンル）の追加・編集 -->
+  <!-- モーダル1: 職業の追加・編集 -->
   <div id="job-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
       <div class="flex items-center justify-between border-b border-guild-border pb-3">
         <h3 id="job-modal-title" class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-hat-wizard text-amber-400"></i>
-          <span>新しい職業を作成</span>
+          <i class="fa-solid fa-hat-wizard text-amber-400"></i><span>新しい職業を作成</span>
         </h3>
-        <button onclick="closeJobModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button onclick="closeJobModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <input type="hidden" id="edit-job-id" />
-
       <div class="space-y-4">
-        <!-- 職業名 -->
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">職業名（ジャンル名） <span class="text-rose-400">*</span></label>
-          <input type="text" id="job-name-input" placeholder="例：エンジニア（賢者）、筋トレ（戦士）" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+          <input type="text" id="job-name-input" placeholder="例：プログラミング、英語学習" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
         </div>
-
-        <!-- テーマカラー選択 -->
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">テーマカラー</label>
-          <div id="color-picker-grid" class="grid grid-cols-6 gap-2">
-            <!-- JSで生成 -->
-          </div>
+          <div id="color-picker-grid" class="grid grid-cols-6 gap-2"></div>
         </div>
-
-        <!-- アイコン選択 -->
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">ジョブアイコン</label>
-          <div id="icon-picker-grid" class="grid grid-cols-6 gap-2 max-h-36 overflow-y-auto p-1">
-            <!-- JSで生成 -->
-          </div>
+          <div id="icon-picker-grid" class="grid grid-cols-6 gap-2 max-h-36 overflow-y-auto p-1"></div>
         </div>
       </div>
-
       <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
-        <button onclick="closeJobModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition">
-          キャンセル
-        </button>
-        <button onclick="saveJob()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold shadow-lg shadow-amber-500/20 transition">
-          保存する
-        </button>
+        <button onclick="closeJobModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold">キャンセル</button>
+        <button onclick="saveJob()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold shadow-lg shadow-amber-500/20">保存する</button>
       </div>
     </div>
   </div>
 
-  <!-- モーダル2: ミッションの設定・編集 -->
+  <!-- モーダル2: ミッション設定 -->
   <div id="mission-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
       <div class="flex items-center justify-between border-b border-guild-border pb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-scroll text-amber-400"></i>
-          <span id="mission-modal-job-title">ミッションを受注</span>
+          <i class="fa-solid fa-scroll text-amber-400"></i><span id="mission-modal-job-title">ミッションを受注</span>
         </h3>
-        <button onclick="closeMissionModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button onclick="closeMissionModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <input type="hidden" id="mission-job-id" />
-
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">達成するミッション内容 <span class="text-rose-400">*</span></label>
-          <input type="text" id="mission-title-input" placeholder="例：Reactのチュートリアルを1章終える" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">ミッション内容 <span class="text-rose-400">*</span></label>
+          <input type="text" id="mission-title-input" placeholder="例：チュートリアルを1章終える" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">報酬メモ・達成条件（任意）</label>
-          <textarea id="mission-memo-input" rows="2" placeholder="例：達成したらお気に入りのコーヒーを飲む！" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">目標期限（任意）</label>
-          <input type="date" id="mission-deadline-input" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500" />
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">メモ（任意）</label>
+          <textarea id="mission-memo-input" rows="2" placeholder="メモを入力..." class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
         </div>
       </div>
-
       <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
-        <button onclick="closeMissionModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition">
-          キャンセル
-        </button>
-        <button onclick="saveMission()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition">
-          ミッションをセット
-        </button>
+        <button onclick="closeMissionModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-750 text-slate-300 text-sm font-bold">キャンセル</button>
+        <button onclick="saveMission()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold shadow-lg shadow-emerald-500/20">セット</button>
       </div>
     </div>
   </div>
@@ -474,47 +432,44 @@
   <!-- モーダル3: レベルアップ祝福演出 -->
   <div id="levelup-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onclick="closeLevelUpModal()">
     <div class="bg-gradient-to-b from-slate-900 to-guild-bg border-2 border-amber-400/80 rounded-3xl w-full max-w-sm p-6 sm:p-8 text-center space-y-5 animate-pop-in gold-glow relative overflow-hidden" onclick="event.stopPropagation()">
-
-      <!-- 背景の光輪 -->
       <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-rpg font-bold tracking-widest uppercase">
-        <i class="fa-solid fa-sparkles"></i> MISSION CLEAR!
+        <i class="fa-solid fa-sparkles"></i> LEVEL UP!
       </div>
-
       <div id="levelup-icon-box" class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-4xl text-amber-400 shadow-lg">
         <i class="fa-solid fa-crown"></i>
       </div>
-
       <div>
-        <div id="levelup-job-name" class="text-sm font-bold text-slate-300">エンジニア（賢者）</div>
-        <h2 class="font-rpg font-extrabold text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 mt-1">
-          LEVEL UP!
+        <div id="levelup-job-name" class="text-sm font-bold text-slate-300">冒険者</div>
+        <h2 class="font-rpg font-extrabold text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 mt-1" id="levelup-title-text">
+          レベルアップ！
         </h2>
       </div>
-
-      <div class="flex items-center justify-center gap-4 py-2 bg-guild-bg/80 rounded-2xl border border-guild-border">
-        <span id="levelup-old-lv" class="font-rpg text-xl font-bold text-slate-400">Lv.1</span>
-        <i class="fa-solid fa-angles-right text-amber-400 animate-pulse"></i>
-        <span id="levelup-new-lv" class="font-rpg text-3xl font-extrabold text-amber-400">Lv.2</span>
-      </div>
-
-      <p id="levelup-mission-text" class="text-xs text-slate-300 bg-slate-800/60 rounded-xl p-3 border border-slate-700/60">
-        「ミッション名」を達成しました！
-      </p>
-
+      <p id="levelup-mission-text" class="text-xs text-slate-300 bg-slate-800/60 rounded-xl p-3 border border-slate-700/60">おめでとうございます！</p>
       <button onclick="closeLevelUpModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition active:scale-95">
-        次のミッションへ進む
+        冒険を続ける
       </button>
     </div>
   </div>
 
-  <!-- モーダル4: 削除確認ダイアログ（confirmの代替） -->
+  <!-- モーダル4: カレンダーの日付詳細ポップアップ -->
+  <div id="calendar-day-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-sm p-5 space-y-4 animate-pop-in">
+      <div class="flex items-center justify-between border-b border-guild-border pb-3">
+        <h3 id="cal-modal-date-title" class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-calendar-day text-amber-400"></i><span>2026年3月15日の達成履歴</span>
+        </h3>
+        <button onclick="document.getElementById('calendar-day-modal').classList.add('hidden')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="cal-modal-items" class="space-y-2 max-h-60 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- モーダル5: 削除確認 -->
   <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-sm p-5 space-y-4 animate-pop-in">
       <h3 id="confirm-title" class="text-base font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-        <span>確認</span>
+        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i><span>確認</span>
       </h3>
       <p id="confirm-message" class="text-sm text-slate-300 leading-relaxed"></p>
       <div class="flex items-center justify-end gap-2 pt-2">
@@ -524,36 +479,12 @@
     </div>
   </div>
 
-  <!-- Firebase SDK & アプリケーションロジック -->
+  <!-- Firebase SDK ＆ アプリケーションロジック -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      signInAnonymously, 
-      signInWithCustomToken, 
-      onAuthStateChanged,
-      GoogleAuthProvider,
-      signInWithPopup,
-      linkWithPopup,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      linkWithCredential,
-      EmailAuthProvider,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      getDoc, 
-      onSnapshot, 
-      collection, 
-      addDoc, 
-      updateDoc, 
-      deleteDoc 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 1. グローバル状態・定数定義
     const JOB_COLORS = [
       { id: 'amber',   name: 'ゴールド',   hex: '#f59e0b', bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/40',   btn: 'bg-amber-500' },
       { id: 'emerald', name: 'エメラルド', hex: '#10b981', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/40', btn: 'bg-emerald-500' },
@@ -569,19 +500,32 @@
       'fa-language', 'fa-camera', 'fa-utensils', 'fa-person-running', 'fa-chess-knight', 'fa-compass'
     ];
 
-    // アプリ状態
+    // キャラクター進化の定義（総レベルに応じて左上アイコン＆称号が変化）
+    function getCharacterEvolution(totalLv) {
+      if (totalLv >= 40) return { icon: 'fa-dragon', title: '伝説の英雄' };
+      if (totalLv >= 25) return { icon: 'fa-user-ninja', title: '上級マスター' };
+      if (totalLv >= 15) return { icon: 'fa-chess-knight', title: '勇者候補' };
+      if (totalLv >= 8)  return { icon: 'fa-shield-halved', title: '一人前の兵士' };
+      if (totalLv >= 3)  return { icon: 'fa-person-walking', title: '見習い冒険者' };
+      return { icon: 'fa-child', title: '見習い村人' };
+    }
+
     const state = {
       user: null,
       jobs: [],
+      dailies: [], // デイリークエストリスト { id, title, completedToday, streak }
+      dailyStats: { level: 1, totalCount: 0 }, // デイリー共通レベルと累計達成数
       logs: [],
       selectedColor: 'amber',
       selectedIcon: 'fa-hat-wizard',
       soundEnabled: true,
+      calendarYear: new Date().getFullYear(),
+      calendarMonth: new Date().getMonth(),
       unsubJobs: null,
+      unsubDailies: null,
       unsubLogs: null
     };
 
-    // Firebase初期化
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'task-rpg-default';
     let app = null;
     let auth = null;
@@ -605,10 +549,8 @@
       updateSyncUI('error', '接続エラー');
     }
 
-    // 2. 認証＆Firestoreリアルタイム同期
     async function initAuth() {
       if (!auth) return;
-
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
@@ -617,7 +559,6 @@
         }
       } catch (err) {
         console.error('Auth error:', err);
-        showToast('認証の初期化に失敗しました', 'error');
       }
 
       onAuthStateChanged(auth, (user) => {
@@ -625,12 +566,14 @@
         updateAuthUI(user);
 
         if (state.unsubJobs) { state.unsubJobs(); state.unsubJobs = null; }
+        if (state.unsubDailies) { state.unsubDailies(); state.unsubDailies = null; }
         if (state.unsubLogs) { state.unsubLogs(); state.unsubLogs = null; }
 
         if (user) {
           subscribeUserData(user.uid);
         } else {
           state.jobs = [];
+          state.dailies = [];
           state.logs = [];
           renderAll();
         }
@@ -642,113 +585,67 @@
       updateSyncUI('syncing', '同期中...');
 
       const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+      const dailiesCol = collection(db, 'artifacts', appId, 'users', uid, 'dailies');
       const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
+      const metaDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'dailyStats');
 
+      // 職業同期
       state.unsubJobs = onSnapshot(jobsCol, (snapshot) => {
         const list = [];
-        snapshot.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() });
-        });
+        snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
         list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         state.jobs = list;
         updateSyncUI('synced', 'クラウド同期済');
         renderAll();
-      }, (error) => {
-        console.error('Jobs snapshot error:', error);
-        updateSyncUI('error', '同期エラー');
       });
 
+      // デイリータスク同期
+      state.unsubDailies = onSnapshot(dailiesCol, (snapshot) => {
+        const list = [];
+        snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
+        state.dailies = list;
+        renderAll();
+      });
+
+      // デイリー共通ステータス同期
+      onSnapshot(metaDoc, (docSnap) => {
+        if (docSnap.exists()) {
+          state.dailyStats = docSnap.data();
+        } else {
+          state.dailyStats = { level: 1, totalCount: 0 };
+        }
+        renderAll();
+      });
+
+      // 履歴同期
       state.unsubLogs = onSnapshot(logsCol, (snapshot) => {
         const list = [];
-        snapshot.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() });
-        });
+        snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
         list.sort((a, b) => (b.clearedAt || 0) - (a.clearedAt || 0));
         state.logs = list;
         renderAll();
-      }, (error) => {
-        console.error('Logs snapshot error:', error);
       });
     }
 
-    // 3. アカウント連携（Google / Email）
+    // 認証・Googleログイン
     window.loginWithGoogle = async function() {
-      if (!auth) return showToast('Firebaseが設定されていません', 'error');
+      if (!auth) return;
       const provider = new GoogleAuthProvider();
       try {
-        if (auth.currentUser && auth.currentUser.isAnonymous) {
-          try {
-            await linkWithPopup(auth.currentUser, provider);
-            showToast('Googleアカウントと連携しました！', 'success');
-            return;
-          } catch (linkErr) {
-            if (linkErr.code === 'auth/credential-already-in-use') {
-              await signInWithPopup(auth, provider);
-              showToast('既存のGoogleアカウントにログインしました！', 'success');
-              return;
-            }
-            throw linkErr;
-          }
-        } else {
-          await signInWithPopup(auth, provider);
-          showToast('Googleアカウントでログインしました！', 'success');
-        }
+        await signInWithPopup(auth, provider);
+        showToast('Googleアカウントでログインしました！', 'success');
       } catch (err) {
-        console.error('Google login error:', err);
-        showToast('Googleログインに失敗しました: ' + (err.message || ''), 'error');
+        showToast('ログインに失敗しました', 'error');
       }
     };
-
-    window.registerWithEmail = async function() {
-      if (!auth) return;
-      const email = document.getElementById('auth-email').value.trim();
-      const password = document.getElementById('auth-password').value;
-      if (!email || password.length < 6) {
-        return showToast('メールアドレスと6文字以上のパスワードを入力してください', 'error');
-      }
-      try {
-        if (auth.currentUser && auth.currentUser.isAnonymous) {
-          const credential = EmailAuthProvider.credential(email, password);
-          await linkWithCredential(auth.currentUser, credential);
-          showToast('アカウント登録完了！現在のデータを引き継ぎました', 'success');
-        } else {
-          await createUserWithEmailAndPassword(auth, email, password);
-          showToast('新規アカウントを登録しました！', 'success');
-        }
-      } catch (err) {
-        console.error('Email register error:', err);
-        showToast('登録エラー: ' + err.message, 'error');
-      }
-    };
-
-    window.loginWithEmail = async function() {
-      if (!auth) return;
-      const email = document.getElementById('auth-email').value.trim();
-      const password = document.getElementById('auth-password').value;
-      if (!email || !password) {
-        return showToast('メールアドレスとパスワードを入力してください', 'error');
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showToast('ログインしました！データを同期します', 'success');
-      } catch (err) {
-        console.error('Email login error:', err);
-        showToast('ログイン失敗: メールかパスワードを確認してください', 'error');
-      }
-    };
-
     window.logoutAccount = async function() {
       if (!auth) return;
-      try {
-        await signOut(auth);
-        await signInAnonymously(auth);
-        showToast('ログアウトしました（ゲストモード）', 'info');
-      } catch (err) {
-        console.error('Logout error:', err);
-      }
+      await signOut(auth);
+      await signInAnonymously(auth);
+      showToast('ログアウトしました', 'info');
     };
 
-    // 4. 職業（ジャンル）CRUD操作
+    // 職業操作
     window.openJobModal = function(jobId = null) {
       const modal = document.getElementById('job-modal');
       const titleEl = document.getElementById('job-modal-title');
@@ -770,50 +667,31 @@
         state.selectedColor = 'amber';
         state.selectedIcon = 'fa-hat-wizard';
       }
-
       renderPickers();
       modal.classList.remove('hidden');
       setTimeout(() => nameInput.focus(), 50);
     };
-
-    window.closeJobModal = function() {
-      document.getElementById('job-modal').classList.add('hidden');
-    };
+    window.closeJobModal = () => document.getElementById('job-modal').classList.add('hidden');
 
     window.saveJob = async function() {
-      if (!state.user || !db) return showToast('データベースに接続されていません', 'error');
+      if (!state.user || !db) return;
       const id = document.getElementById('edit-job-id').value;
       const name = document.getElementById('job-name-input').value.trim();
-
-      if (!name) {
-        return showToast('職業名を入力してください', 'error');
-      }
+      if (!name) return showToast('職業名を入力してください', 'error');
 
       const uid = state.user.uid;
       try {
         if (id) {
-          const jobRef = doc(db, 'artifacts', appId, 'users', uid, 'jobs', id);
-          await updateDoc(jobRef, {
-            name: name,
-            colorId: state.selectedColor,
-            icon: state.selectedIcon
-          });
-          showToast(`「${name}」を更新しました`, 'success');
+          await updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'jobs', id), { name, colorId: state.selectedColor, icon: state.selectedIcon });
+          showToast('更新しました', 'success');
         } else {
-          const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
-          await addDoc(jobsCol, {
-            name: name,
-            colorId: state.selectedColor,
-            icon: state.selectedIcon,
-            level: 1,
-            currentMission: null,
-            createdAt: Date.now()
+          await addDoc(collection(db, 'artifacts', appId, 'users', uid, 'jobs'), {
+            name, colorId: state.selectedColor, icon: state.selectedIcon, level: 1, currentMission: null, createdAt: Date.now()
           });
-          showToast(`新職業「${name}」が誕生しました！`, 'success');
+          showToast('新職業が誕生しました！', 'success');
         }
         closeJobModal();
       } catch (err) {
-        console.error('Save job error:', err);
         showToast('保存に失敗しました', 'error');
       }
     };
@@ -821,143 +699,68 @@
     window.confirmDeleteJob = function(jobId) {
       const job = state.jobs.find(j => j.id === jobId);
       if (!job) return;
-      openConfirmModal(
-        '職業の削除',
-        `「${job.name}（Lv.${job.level}）」を削除しますか？現在設定中のミッションも削除されます。（過去の達成履歴は残ります）`,
-        async () => {
-          if (!state.user || !db) return;
-          try {
-            const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
-            await deleteDoc(jobRef);
-            showToast(`「${job.name}」を削除しました`, 'info');
-          } catch (err) {
-            console.error('Delete job error:', err);
-            showToast('削除に失敗しました', 'error');
-          }
-        }
-      );
+      openConfirmModal('職業の削除', `「${job.name}」を削除しますか？`, async () => {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId));
+        showToast('削除しました', 'info');
+      });
     };
 
     window.addPresetJobs = async function() {
       if (!state.user || !db) return;
       const presets = [
-        { name: 'エンジニア（賢者）', icon: 'fa-code', colorId: 'sky', mission: '技術書を15ページ読む' },
-        { name: '筋トレ（戦士）', icon: 'fa-dumbbell', colorId: 'rose', mission: '腕立て伏せ30回＆スクワット30回' },
-        { name: '音楽（吟遊詩人）', icon: 'fa-music', colorId: 'emerald', mission: '好きな曲のワンフレーズを練習する' }
+        { name: 'エンジニア（賢者）', icon: 'fa-code', colorId: 'sky', mission: '技術書を読む' },
+        { name: '筋トレ（戦士）', icon: 'fa-dumbbell', colorId: 'rose', mission: '腕立て伏せをする' },
+        { name: '音楽（吟遊詩人）', icon: 'fa-music', colorId: 'emerald', mission: '楽器を練習する' }
       ];
-
       const uid = state.user.uid;
-      const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+      const col = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
       const now = Date.now();
-
-      try {
-        for (let i = 0; i < presets.length; i++) {
-          const p = presets[i];
-          await addDoc(jobsCol, {
-            name: p.name,
-            icon: p.icon,
-            colorId: p.colorId,
-            level: 1,
-            currentMission: {
-              title: p.mission,
-              memo: 'まずは最初のクエストをクリアしよう！',
-              deadline: '',
-              createdAt: now + i
-            },
-            createdAt: now + i
-          });
-        }
-        showToast('サンプル職業3種を追加しました！', 'success');
-      } catch (err) {
-        console.error('Preset error:', err);
-        showToast('追加に失敗しました', 'error');
+      for (let i = 0; i < presets.length; i++) {
+        const p = presets[i];
+        await addDoc(col, { name: p.name, icon: p.icon, colorId: p.colorId, level: 1, currentMission: { title: p.mission, memo: '', deadline: '', createdAt: now + i }, createdAt: now + i });
       }
+      showToast('サンプルを追加しました！', 'success');
     };
 
-    // 5. ミッション設定 ＆ 達成（レベルアップ）
+    // ミッション操作
     window.openMissionModal = function(jobId) {
       const job = state.jobs.find(j => j.id === jobId);
       if (!job) return;
-
       document.getElementById('mission-job-id').value = job.id;
       document.getElementById('mission-modal-job-title').textContent = `${job.name} のミッション`;
-
-      const titleInput = document.getElementById('mission-title-input');
-      const memoInput = document.getElementById('mission-memo-input');
-      const deadlineInput = document.getElementById('mission-deadline-input');
-
-      if (job.currentMission) {
-        titleInput.value = job.currentMission.title || '';
-        memoInput.value = job.currentMission.memo || '';
-        deadlineInput.value = job.currentMission.deadline || '';
-      } else {
-        titleInput.value = '';
-        memoInput.value = '';
-        deadlineInput.value = '';
-      }
-
+      document.getElementById('mission-title-input').value = job.currentMission?.title || '';
+      document.getElementById('mission-memo-input').value = job.currentMission?.memo || '';
       document.getElementById('mission-modal').classList.remove('hidden');
-      setTimeout(() => titleInput.focus(), 50);
     };
-
-    window.closeMissionModal = function() {
-      document.getElementById('mission-modal').classList.add('hidden');
-    };
+    window.closeMissionModal = () => document.getElementById('mission-modal').classList.add('hidden');
 
     window.saveMission = async function() {
       if (!state.user || !db) return;
       const jobId = document.getElementById('mission-job-id').value;
       const title = document.getElementById('mission-title-input').value.trim();
       const memo = document.getElementById('mission-memo-input').value.trim();
-      const deadline = document.getElementById('mission-deadline-input').value;
+      if (!title) return showToast('ミッション内容を入力してください', 'error');
 
-      if (!title) {
-        return showToast('ミッション内容を入力してください', 'error');
-      }
-
-      try {
-        const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
-        await updateDoc(jobRef, {
-          currentMission: {
-            title,
-            memo,
-            deadline,
-            createdAt: Date.now()
-          }
-        });
-        closeMissionModal();
-        showToast('新しいミッションを受注しました！', 'success');
-      } catch (err) {
-        console.error('Save mission error:', err);
-        showToast('ミッションの保存に失敗しました', 'error');
-      }
+      await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId), {
+        currentMission: { title, memo, createdAt: Date.now() }
+      });
+      closeMissionModal();
+      showToast('ミッションを受注しました！', 'success');
     };
 
     window.quickSetMission = async function(event, jobId) {
       event.preventDefault();
-      if (!state.user || !db) return;
       const input = document.getElementById(`quick-input-${jobId}`);
       const title = input ? input.value.trim() : '';
-      if (!title) {
-        return showToast('ミッション名を入力してください', 'error');
-      }
+      if (!title) return showToast('ミッション名を入力してください', 'error');
 
-      try {
-        const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
-        await updateDoc(jobRef, {
-          currentMission: {
-            title,
-            memo: '',
-            deadline: '',
-            createdAt: Date.now()
-          }
-        });
-        showToast('ミッションを受注しました！', 'success');
-      } catch (err) {
-        console.error('Quick mission error:', err);
-      }
+      await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId), {
+        currentMission: { title, memo: '', createdAt: Date.now() }
+      });
+      showToast('ミッションを受注しました！', 'success');
     };
 
+    // 職業ミッション達成
     window.completeMission = async function(jobId) {
       if (!state.user || !db) return;
       const job = state.jobs.find(j => j.id === jobId);
@@ -966,178 +769,215 @@
       const uid = state.user.uid;
       const oldLevel = Number(job.level) || 1;
       const newLevel = oldLevel + 1;
-      const clearedMissionTitle = job.currentMission.title;
+      const title = job.currentMission.title;
 
-      try {
-        const jobRef = doc(db, 'artifacts', appId, 'users', uid, 'jobs', jobId);
-        await updateDoc(jobRef, {
-          level: newLevel,
-          currentMission: null
-        });
+      await updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'jobs', jobId), { level: newLevel, currentMission: null });
 
-        const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
-        await addDoc(logsCol, {
-          jobId: job.id,
-          jobName: job.name,
-          jobIcon: job.icon,
-          jobColorId: job.colorId,
-          missionTitle: clearedMissionTitle,
-          newLevel: newLevel,
-          clearedAt: Date.now()
-        });
+      // 履歴（カレンダー用データ含む）に記録
+      await addDoc(collection(db, 'artifacts', appId, 'users', uid, 'questLogs'), {
+        type: 'job',
+        jobId: job.id, jobName: job.name, jobIcon: job.icon, jobColorId: job.colorId,
+        missionTitle: title, newLevel: newLevel, clearedAt: Date.now()
+      });
 
-        triggerLevelUpCelebration(job, oldLevel, newLevel, clearedMissionTitle);
+      triggerLevelUpCelebration(job.name, `Lv.${oldLevel} → Lv.${newLevel}`, `「${title}」を達成しレベルアップ！`, job.icon, job.colorId);
+    };
 
-      } catch (err) {
-        console.error('Complete mission error:', err);
-        showToast('達成処理中にエラーが発生しました', 'error');
+    // ==========================================
+    // デイリークエスト処理（共通レベル・3回達成でLVUP）
+    // ==========================================
+    window.addDailyTask = async function(event) {
+      event.preventDefault();
+      if (!state.user || !db) return;
+      const input = document.getElementById('daily-title-input');
+      const title = input.value.trim();
+      if (!title) return showToast('デイリー内容を入力してください', 'error');
+
+      await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'dailies'), {
+        title, createdAt: Date.now()
+      });
+      input.value = '';
+      showToast('デイリークエストを追加しました', 'success');
+    };
+
+    window.completeDailyTask = async function(dailyId) {
+      if (!state.user || !db) return;
+      const daily = state.dailies.find(d => d.id === dailyId);
+      if (!daily) return;
+
+      const uid = state.user.uid;
+      const currentStats = state.dailyStats || { level: 1, totalCount: 0 };
+      const newTotal = currentStats.totalCount + 1;
+      let newLevel = currentStats.level;
+
+      // 3回達成ごとに共通レベルアップ！
+      let leveledUp = false;
+      if (newTotal % 3 === 0) {
+        newLevel += 1;
+        leveledUp = true;
+      }
+
+      // 共通ステータス更新
+      const metaDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'dailyStats');
+      await updateDoc(metaDoc, { level: newLevel, totalCount: newTotal }).catch(async () => {
+        // ドキュメント未作成時のフォールバック用set
+        const { setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        await setDoc(metaDoc, { level: newLevel, totalCount: newTotal });
+      });
+
+      // 履歴に追加（カレンダーに反映）
+      await addDoc(collection(db, 'artifacts', appId, 'users', uid, 'questLogs'), {
+        type: 'daily',
+        missionTitle: `[デイリー] ${daily.title}`,
+        newLevel: newLevel,
+        clearedAt: Date.now()
+      });
+
+      if (leveledUp) {
+        triggerLevelUpCelebration('デイリー共通修行', `Lv.${newLevel - 1} → Lv.${newLevel}`, `デイリー累計3回達成！共通レベルがアップしました！`, 'fa-shield-heart', 'sky');
+      } else {
+        showToast(`「${daily.title}」達成！ (あと ${3 - (newTotal % 3)} 回で共通LvUP)`, 'success');
       }
     };
 
-    // 6. レベルアップ祝福エフェクト ＆ サウンド
-    function triggerLevelUpCelebration(job, oldLv, newLv, missionTitle) {
-      const colorObj = JOB_COLORS.find(c => c.id === job.colorId) || JOB_COLORS[0];
+    window.deleteDailyTask = async function(dailyId) {
+      if (!state.user || !db) return;
+      await deleteDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'dailies', dailyId));
+      showToast('デイリーを削除しました', 'info');
+    };
 
+    // 演出
+    function triggerLevelUpCelebration(name, subtitle, desc, icon, colorId) {
+      const colorObj = JOB_COLORS.find(c => c.id === colorId) || JOB_COLORS[0];
       const iconBox = document.getElementById('levelup-icon-box');
       iconBox.className = `w-20 h-20 mx-auto rounded-2xl ${colorObj.bg} border-2 ${colorObj.border} flex items-center justify-center text-4xl ${colorObj.text} shadow-lg`;
-      iconBox.innerHTML = `<i class="fa-solid ${job.icon}"></i>`;
+      iconBox.innerHTML = `<i class="fa-solid ${icon}"></i>`;
 
-      document.getElementById('levelup-job-name').textContent = job.name;
-      document.getElementById('levelup-old-lv').textContent = `Lv.${oldLv}`;
-      document.getElementById('levelup-new-lv').textContent = `Lv.${newLv}`;
-      document.getElementById('levelup-mission-text').textContent = `「${missionTitle}」を達成しました！`;
-
+      document.getElementById('levelup-job-name').textContent = name;
+      document.getElementById('levelup-title-text').textContent = subtitle;
+      document.getElementById('levelup-mission-text').textContent = desc;
       document.getElementById('levelup-modal').classList.remove('hidden');
 
       if (typeof confetti === 'function') {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#f59e0b', '#10b981', '#38bdf8', '#fde68a']
-        });
+        confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 }, colors: ['#f59e0b', '#10b981', '#38bdf8', '#fde68a'] });
       }
-
       if (state.soundEnabled && typeof Tone !== 'undefined') {
         try {
           Tone.start();
-          const synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.6 }
-          }).toDestination();
+          const synth = new Tone.PolySynth(Tone.Synth).toDestination();
           synth.volume.value = -8;
           const now = Tone.now();
           synth.triggerAttackRelease('C5', '16n', now);
           synth.triggerAttackRelease('E5', '16n', now + 0.1);
           synth.triggerAttackRelease('G5', '16n', now + 0.2);
           synth.triggerAttackRelease(['C6', 'E6'], '4n', now + 0.32);
-        } catch (e) {
-          // 音声再生制限時は無視
-        }
+        } catch (e) {}
       }
     }
+    window.closeLevelUpModal = () => document.getElementById('levelup-modal').classList.add('hidden');
+    window.toggleSoundSetting = () => state.soundEnabled = document.getElementById('sound-toggle').checked;
 
-    window.closeLevelUpModal = function() {
-      document.getElementById('levelup-modal').classList.add('hidden');
+    // ==========================================
+    // カレンダー機能
+    // ==========================================
+    window.changeCalendarMonth = function(direction) {
+      state.calendarMonth += direction;
+      if (state.calendarMonth > 11) {
+        state.calendarMonth = 0;
+        state.calendarYear += 1;
+      } else if (state.calendarMonth < 0) {
+        state.calendarMonth = 11;
+        state.calendarYear -= 1;
+      }
+      renderCalendar();
     };
 
-    window.toggleSoundSetting = function() {
-      state.soundEnabled = document.getElementById('sound-toggle').checked;
-    };
+    function renderCalendar() {
+      const year = state.calendarYear;
+      const month = state.calendarMonth;
+      document.getElementById('calendar-month-title').textContent = `${year}年 ${month + 1}月 達成カレンダー`;
 
-    // 7. JSONエクスポート・インポート機能
-    window.exportDataJSON = function() {
-      const data = {
-        appName: 'タスクRPG',
-        exportedAt: new Date().toISOString(),
-        jobs: state.jobs,
-        logs: state.logs
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `task-rpg-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('バックアップJSONをダウンロードしました', 'success');
-    };
+      const grid = document.getElementById('calendar-grid');
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
 
-    window.importDataJSON = function(event) {
-      const file = event.target.files[0];
-      if (!file || !state.user || !db) return;
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          if (!Array.isArray(parsed.jobs)) {
-            throw new Error('無効なバックアップ形式です');
-          }
-
-          const uid = state.user.uid;
-          const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
-          const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
-
-          for (const j of parsed.jobs) {
-            await addDoc(jobsCol, {
-              name: j.name || '無題の職業',
-              icon: j.icon || 'fa-hat-wizard',
-              colorId: j.colorId || 'amber',
-              level: Number(j.level) || 1,
-              currentMission: j.currentMission || null,
-              createdAt: j.createdAt || Date.now()
-            });
-          }
-
-          if (Array.isArray(parsed.logs)) {
-            for (const l of parsed.logs) {
-              await addDoc(logsCol, {
-                jobId: l.jobId || '',
-                jobName: l.jobName || '',
-                jobIcon: l.jobIcon || 'fa-hat-wizard',
-                jobColorId: l.jobColorId || 'amber',
-                missionTitle: l.missionTitle || '',
-                newLevel: Number(l.newLevel) || 2,
-                clearedAt: l.clearedAt || Date.now()
-              });
-            }
-          }
-
-          showToast(`${parsed.jobs.length}件の職業データを復元しました！`, 'success');
-        } catch (err) {
-          console.error('Import error:', err);
-          showToast('JSONの読み込みに失敗しました', 'error');
+      // その月に達成されたログを日付ごとにマッピング
+      const clearedDays = {};
+      state.logs.forEach(log => {
+        const d = new Date(log.clearedAt);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const dayNum = d.getDate();
+          if (!clearedDays[dayNum]) clearedDays[dayNum] = [];
+          clearedDays[dayNum].push(log);
         }
-        event.target.value = '';
-      };
-      reader.readAsText(file);
+      });
+
+      let html = '';
+      // 空白セル
+      for (let i = 0; i < firstDay; i++) {
+        html += `<div class="h-10 rounded-xl bg-guild-bg/20 border border-transparent"></div>`;
+      }
+
+      // 日付セル
+      for (let day = 1; day <= lastDate; day++) {
+        const hasCleared = clearedDays[day] && clearedDays[day].length > 0;
+        const bgClass = hasCleared ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold cursor-pointer hover:bg-amber-500/30' : 'bg-guild-bg border-guild-border text-slate-400';
+        
+        html += `
+          <div onclick="openCalendarDayModal(${year}, ${month}, ${day})" class="h-10 rounded-xl border flex flex-col items-center justify-center relative transition ${bgClass}">
+            <span class="text-xs">${day}</span>
+            ${hasCleared ? `<span class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-amber-400"></span>` : ''}
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    window.openCalendarDayModal = function(year, month, day) {
+      const targetLogs = state.logs.filter(log => {
+        const d = new Date(log.clearedAt);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+      });
+
+      document.getElementById('cal-modal-date-title').innerHTML = `<i class="fa-solid fa-calendar-day text-amber-400"></i><span>${year}年${month+1}月${day}日の達成記録 (${targetLogs.length}件)</span>`;
+      const container = document.getElementById('cal-modal-items');
+
+      if (targetLogs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">この日の達成記録はありません</p>`;
+      } else {
+        container.innerHTML = targetLogs.map(l => `
+          <div class="bg-guild-bg border border-guild-border rounded-xl p-3 flex items-center justify-between gap-2 text-xs">
+            <div>
+              <span class="font-bold text-amber-300">${escapeHtml(l.jobName || 'デイリー')}</span>
+              <p class="text-white font-medium mt-0.5">${escapeHtml(l.missionTitle)}</p>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-bold whitespace-nowrap">Lv.${l.newLevel}</span>
+          </div>
+        `).join('');
+      }
+      document.getElementById('calendar-day-modal').classList.remove('hidden');
     };
 
-    // 8. UIレンダリング関数群
+    // レンダリング統合
     function renderAll() {
       renderHeaderStats();
       renderJobsGrid();
-      renderLogFilterOptions();
+      renderDailiesList();
+      renderCalendar();
       renderLogs();
     }
 
     function renderHeaderStats() {
-      const totalLevel = state.jobs.reduce((sum, j) => sum + (Number(j.level) || 1), 0);
-      const displayTotal = state.jobs.length > 0 ? totalLevel : 1;
-      const clearedCount = state.logs.length;
-
+      const totalJobLevel = state.jobs.reduce((sum, j) => sum + (Number(j.level) || 1), 0);
+      const displayTotal = (state.jobs.length > 0 ? totalJobLevel : 1) + (state.dailyStats?.level || 1) - 1;
+      
       document.getElementById('total-level-display').textContent = `Lv.${displayTotal}`;
-      document.getElementById('total-cleared-display').textContent = `${clearedCount}件`;
+      document.getElementById('total-cleared-display').textContent = `${state.logs.length}件`;
 
-      let rankTitle = '見習い冒険者';
-      if (displayTotal >= 100) rankTitle = '伝説の英雄';
-      else if (displayTotal >= 50) rankTitle = 'S級マスター';
-      else if (displayTotal >= 30) rankTitle = 'A級熟練冒険者';
-      else if (displayTotal >= 15) rankTitle = 'B級中堅冒険者';
-      else if (displayTotal >= 5) rankTitle = 'C級駆け出し冒険者';
-
-      document.getElementById('adventurer-rank-badge').textContent = rankTitle;
+      // キャラクター進化計算
+      const charInfo = getCharacterEvolution(displayTotal);
+      document.getElementById('adventurer-rank-badge').textContent = charInfo.title;
+      document.getElementById('header-avatar-icon').innerHTML = `<i class="fa-solid ${charInfo.icon}"></i>`;
     }
 
     function renderJobsGrid() {
@@ -1149,352 +989,193 @@
         emptyBanner.classList.remove('hidden');
         return;
       }
-
       emptyBanner.classList.add('hidden');
       grid.innerHTML = state.jobs.map(job => {
         const c = JOB_COLORS.find(col => col.id === job.colorId) || JOB_COLORS[0];
         const hasMission = job.currentMission && job.currentMission.title;
-
         let missionBlock = '';
+
         if (hasMission) {
           const m = job.currentMission;
-          const deadlineBadge = m.deadline 
-            ? `<span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"><i class="fa-regular fa-calendar"></i>${escapeHtml(m.deadline)}</span>` 
-            : '';
-          const memoText = m.memo 
-            ? `<p class="text-xs text-slate-400 mt-1.5 line-clamp-2"><i class="fa-solid fa-gift text-amber-400/80 mr-1"></i>${escapeHtml(m.memo)}</p>` 
-            : '';
-
           missionBlock = `
             <div class="flex-1 flex flex-col justify-between bg-guild-bg/90 border border-guild-border rounded-xl p-4 space-y-4">
               <div>
                 <div class="flex items-center justify-between gap-2 mb-1.5">
-                  <span class="text-[11px] font-bold tracking-wider uppercase ${c.text} flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full ${c.btn} animate-ping"></span>
-                    挑戦中のミッション
-                  </span>
-                  <div class="flex items-center gap-1.5">
-                    ${deadlineBadge}
-                    <button onclick="openMissionModal('${job.id}')" title="ミッションを編集" class="w-7 h-7 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                  </div>
+                  <span class="text-[11px] font-bold ${c.text}">挑戦中のミッション</span>
+                  <button onclick="openMissionModal('${job.id}')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
                 </div>
-                <h4 class="text-base font-bold text-white leading-snug break-words">
-                  ${escapeHtml(m.title)}
-                </h4>
-                ${memoText}
+                <h4 class="text-base font-bold text-white">${escapeHtml(m.title)}</h4>
               </div>
-
-              <button onclick="completeMission('${job.id}')" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition active:scale-95 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-circle-check text-base"></i>
-                <span>ミッション達成！（Lv.${Number(job.level) + 1}へ）</span>
+              <button onclick="completeMission('${job.id}')" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+                <i class="fa-solid fa-circle-check"></i><span>ミッション達成！（Lv.${Number(job.level) + 1}へ）</span>
               </button>
             </div>
           `;
         } else {
           missionBlock = `
             <div class="flex-1 flex flex-col justify-between bg-guild-bg/50 border border-dashed border-guild-border rounded-xl p-4 space-y-3">
-              <div class="text-center py-2">
-                <span class="text-xs font-bold text-slate-400">現在受注中のミッションはありません</span>
-              </div>
+              <div class="text-center py-2"><span class="text-xs font-bold text-slate-400">ミッション未設定</span></div>
               <form onsubmit="quickSetMission(event, '${job.id}')" class="space-y-2">
                 <div class="flex gap-1.5">
-                  <input type="text" id="quick-input-${job.id}" placeholder="新しいミッションを入力..." class="flex-1 min-w-0 bg-guild-bg border border-guild-border rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500" />
-                  <button type="submit" class="px-3.5 py-2 rounded-xl ${c.btn} text-slate-950 font-bold text-xs whitespace-nowrap hover:opacity-90 transition active:scale-95">
-                    受注
-                  </button>
+                  <input type="text" id="quick-input-${job.id}" placeholder="ミッションを入力..." class="flex-1 bg-guild-bg border border-guild-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500" />
+                  <button type="submit" class="px-3 py-2 rounded-xl ${c.btn} text-slate-950 font-bold text-xs">受注</button>
                 </div>
-                <button type="button" onclick="openMissionModal('${job.id}')" class="w-full py-1.5 text-[11px] text-slate-400 hover:text-amber-300 transition flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-sliders"></i><span>メモや期限つきで詳しく設定する</span>
-                </button>
               </form>
             </div>
           `;
         }
 
         return `
-          <article class="bg-guild-card hover:bg-guild-cardHover/80 border border-guild-border rounded-2xl p-5 flex flex-col gap-4 transition-all shadow-lg">
-            <!-- カード上部：アイコン・職業名・レベルバッジ -->
+          <article class="bg-guild-card border border-guild-border rounded-2xl p-5 flex flex-col gap-4 shadow-lg">
             <div class="flex items-start justify-between gap-3">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text} flex-shrink-0">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text}">
                   <i class="fa-solid ${job.icon}"></i>
                 </div>
-                <div class="min-w-0">
-                  <h3 class="font-bold text-base sm:text-lg text-white truncate">${escapeHtml(job.name)}</h3>
-                  <div class="flex items-center gap-2 mt-0.5">
-                    <span class="font-rpg font-extrabold text-sm sm:text-base ${c.text}">Lv.${job.level}</span>
-                    <span class="text-[11px] text-slate-500">達成: ${Number(job.level) - 1}回</span>
-                  </div>
+                <div>
+                  <h3 class="font-bold text-base text-white">${escapeHtml(job.name)}</h3>
+                  <span class="font-rpg font-extrabold text-sm ${c.text}">Lv.${job.level}</span>
                 </div>
               </div>
-
-              <!-- 職業編集・削除メニュー -->
-              <div class="flex items-center gap-1 flex-shrink-0">
-                <button onclick="openJobModal('${job.id}')" title="職業を編集" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
-                  <i class="fa-solid fa-gear text-xs"></i>
-                </button>
-                <button onclick="confirmDeleteJob('${job.id}')" title="職業を削除" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition">
-                  <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
+              <div class="flex items-center gap-1">
+                <button onclick="openMissionModal('${job.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white"><i class="fa-solid fa-gear text-xs"></i></button>
+                <button onclick="confirmDeleteJob('${job.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash-can text-xs"></i></button>
               </div>
             </div>
-
-            <!-- 経験値バー風装飾（1ミッション＝1レベルアップを表現） -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>NEXT LEVEL</span>
-                <span>あと 1 ミッション達成で Lv.${Number(job.level) + 1}</span>
-              </div>
-              <div class="w-full h-1.5 bg-guild-bg rounded-full overflow-hidden border border-guild-border/60">
-                <div class="h-full ${c.btn} transition-all duration-500 ${hasMission ? 'w-1/2 opacity-90' : 'w-1/12 opacity-40'}"></div>
-              </div>
-            </div>
-
-            <!-- ミッション枠 -->
             ${missionBlock}
           </article>
         `;
       }).join('');
     }
 
-    function renderLogFilterOptions() {
-      const select = document.getElementById('log-filter-job');
-      const currentVal = select.value;
-      const options = ['<option value="all">すべての職業</option>'];
-      state.jobs.forEach(j => {
-        options.push(`<option value="${j.id}">${escapeHtml(j.name)} (Lv.${j.level})</option>`);
-      });
-      select.innerHTML = options.join('');
-      if (state.jobs.some(j => j.id === currentVal)) {
-        select.value = currentVal;
+    function renderDailiesList() {
+      const container = document.getElementById('dailies-list');
+      const stats = state.dailyStats || { level: 1, totalCount: 0 };
+      const currentMod = stats.totalCount % 3;
+
+      document.getElementById('daily-level-display').textContent = `Lv.${stats.level}`;
+      document.getElementById('daily-progress-display').textContent = `${currentMod} / 3回`;
+
+      if (state.dailies.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">デイリークエストが登録されていません。上のフォームから追加しましょう！</div>`;
+        return;
       }
+
+      container.innerHTML = state.dailies.map(d => `
+        <div class="bg-guild-bg border border-guild-border rounded-xl p-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 flex-shrink-0">
+              <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <h4 class="text-sm font-bold text-white truncate">${escapeHtml(d.title)}</h4>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button onclick="completeDailyTask('${d.id}')" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow active:scale-95 transition">
+              <i class="fa-solid fa-check"></i><span>達成 (+1)</span>
+            </button>
+            <button onclick="deleteDailyTask('${d.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>
+          </div>
+        </div>
+      `).join('');
     }
 
     window.renderLogs = function() {
       const container = document.getElementById('logs-list');
-      const filterJobId = document.getElementById('log-filter-job').value;
+      const filter = document.getElementById('log-filter-job').value;
 
-      const filtered = filterJobId === 'all' 
-        ? state.logs 
-        : state.logs.filter(l => l.jobId === filterJobId);
+      let filtered = state.logs;
+      if (filter === 'daily') {
+        filtered = state.logs.filter(l => l.type === 'daily');
+      }
 
       if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="bg-guild-card border border-guild-border rounded-2xl p-8 text-center text-slate-400 text-sm">
-            <i class="fa-solid fa-scroll text-3xl text-slate-600 mb-2 block"></i>
-            まだ達成記録がありません。ミッションをクリアして歴史を刻みましょう！
-          </div>
-        `;
+        container.innerHTML = `<div class="bg-guild-card border border-guild-border rounded-2xl p-6 text-center text-slate-400 text-sm">達成記録はまだありません</div>`;
         return;
       }
 
       container.innerHTML = filtered.map(log => {
-        const c = JOB_COLORS.find(col => col.id === log.jobColorId) || JOB_COLORS[0];
-        const dateStr = formatDateTime(log.clearedAt);
+        const isDaily = log.type === 'daily';
+        const c = isDaily ? { bg: 'bg-sky-500/15', border: 'border-sky-500/30', text: 'text-sky-400' } : (JOB_COLORS.find(col => col.id === log.jobColorId) || JOB_COLORS[0]);
+        const dateStr = new Date(log.clearedAt).toLocaleString();
 
         return `
           <div class="bg-guild-card border border-guild-border rounded-xl p-4 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center ${c.text} flex-shrink-0">
-                <i class="fa-solid ${log.jobIcon || 'fa-hat-wizard'}"></i>
+                <i class="fa-solid ${isDaily ? 'fa-calendar-day' : log.jobIcon}"></i>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-xs font-bold ${c.text}">${escapeHtml(log.jobName)}</span>
-                  <span class="text-[11px] font-rpg font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    Lv.${log.newLevel} 到達!
-                  </span>
-                </div>
+                <span class="text-xs font-bold ${c.text}">${escapeHtml(isDaily ? 'デイリー修行' : log.jobName)} (Lv.${log.newLevel})</span>
                 <p class="text-sm font-bold text-white truncate mt-0.5">${escapeHtml(log.missionTitle)}</p>
               </div>
             </div>
-            <div class="text-right flex-shrink-0">
-              <span class="text-[11px] text-slate-400 block">${dateStr}</span>
-              <span class="text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-check mr-0.5"></i>CLEAR</span>
-            </div>
+            <span class="text-[11px] text-slate-400 whitespace-nowrap">${dateStr}</span>
           </div>
         `;
       }).join('');
     };
 
     function renderPickers() {
-      const colorGrid = document.getElementById('color-picker-grid');
-      colorGrid.innerHTML = JOB_COLORS.map(c => {
-        const selected = state.selectedColor === c.id;
-        return `
-          <button type="button" onclick="selectJobColor('${c.id}')" class="h-9 rounded-xl ${c.btn} flex items-center justify-center text-slate-950 transition ${selected ? 'ring-2 ring-white scale-105' : 'opacity-70 hover:opacity-100'}">
-            ${selected ? '<i class="fa-solid fa-check text-xs font-bold"></i>' : ''}
-          </button>
-        `;
-      }).join('');
+      document.getElementById('color-picker-grid').innerHTML = JOB_COLORS.map(c => `
+        <button type="button" onclick="selectJobColor('${c.id}')" class="h-9 rounded-xl ${c.btn} flex items-center justify-center text-slate-950 ${state.selectedColor === c.id ? 'ring-2 ring-white' : 'opacity-70'}">
+          ${state.selectedColor === c.id ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+        </button>
+      `).join('');
 
-      const iconGrid = document.getElementById('icon-picker-grid');
-      iconGrid.innerHTML = JOB_ICONS.map(icon => {
-        const selected = state.selectedIcon === icon;
-        return `
-          <button type="button" onclick="selectJobIcon('${icon}')" class="h-10 rounded-xl border flex items-center justify-center text-base transition ${selected ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-guild-bg border-guild-border text-slate-400 hover:text-white'}">
-            <i class="fa-solid ${icon}"></i>
-          </button>
-        `;
-      }).join('');
+      document.getElementById('icon-picker-grid').innerHTML = JOB_ICONS.map(icon => `
+        <button type="button" onclick="selectJobIcon('${icon}')" class="h-10 rounded-xl border flex items-center justify-center ${state.selectedIcon === icon ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-guild-bg border-guild-border text-slate-400'}">
+          <i class="fa-solid ${icon}"></i>
+        </button>
+      `).join('');
     }
+    window.selectJobColor = (id) => { state.selectedColor = id; renderPickers(); };
+    window.selectJobIcon = (icon) => { state.selectedIcon = icon; renderPickers(); };
 
-    window.selectJobColor = function(colorId) {
-      state.selectedColor = colorId;
-      renderPickers();
-    };
-
-    window.selectJobIcon = function(icon) {
-      state.selectedIcon = icon;
-      renderPickers();
-    };
-
-    // 9. タブ切り替え ＆ UIヘルパー
     window.switchTab = function(tabName) {
-      ['quests', 'logs', 'settings'].forEach(t => {
-        const sec = document.getElementById(`tab-${t}`);
-        if (sec) sec.classList.toggle('hidden', t !== tabName);
-
-        const pcBtn = document.getElementById(`nav-pc-${t}`);
-        if (pcBtn) {
-          if (t === tabName) {
-            pcBtn.className = 'pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-amber-500 text-slate-950 shadow';
-          } else {
-            pcBtn.className = 'pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all';
-          }
-        }
-
-        const spBtn = document.getElementById(`nav-sp-${t}`);
-        if (spBtn) {
-          if (t === tabName) {
-            spBtn.className = 'sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-amber-400 font-bold';
-          } else {
-            spBtn.className = 'sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400';
-          }
-        }
+      ['quests', 'dailies', 'logs', 'settings'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
       });
     };
 
     function updateSyncUI(status, text) {
-      const dot = document.getElementById('sync-dot');
-      const label = document.getElementById('sync-status-text');
+      document.getElementById('sync-status-text').textContent = text;
+      document.getElementById('sync-dot').className = status === 'synced' ? 'w-2 h-2 rounded-full bg-emerald-400' : 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
       const detail = document.getElementById('detail-sync-status');
-
-      label.textContent = text;
       if (detail) detail.textContent = text;
-
-      if (status === 'synced') {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-      } else if (status === 'syncing') {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-      } else {
-        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
-      }
     }
 
     function updateAuthUI(user) {
-      const uidEl = document.getElementById('user-uid-display');
-      const badgeEl = document.getElementById('auth-badge');
-      const emailRow = document.getElementById('user-email-row');
-      const emailEl = document.getElementById('user-email-display');
-      const formsBox = document.getElementById('auth-forms-container');
-      const logoutBox = document.getElementById('auth-logged-in-actions');
-
-      if (!user) {
-        uidEl.textContent = '未接続';
-        return;
-      }
-
-      uidEl.textContent = user.uid;
-
-      if (user.isAnonymous) {
-        badgeEl.textContent = 'ゲストモード（端末固有）';
-        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30';
-        emailRow.classList.add('hidden');
-        formsBox.classList.remove('hidden');
-        logoutBox.classList.add('hidden');
-      } else {
-        badgeEl.textContent = 'アカウント連携済';
-        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
-        emailRow.classList.remove('hidden');
-        emailEl.textContent = user.email || 'Googleアカウント';
-        formsBox.classList.add('hidden');
-        logoutBox.classList.remove('hidden');
-      }
+      if (!user) return;
+      document.getElementById('user-uid-display').textContent = user.uid;
+      document.getElementById('auth-badge').textContent = user.isAnonymous ? 'ゲストモード' : 'アカウント連携済';
     }
 
-    function showToast(message, type = 'info') {
+    function showToast(msg, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      const styles = {
-        success: 'bg-emerald-950/95 border-emerald-500/60 text-emerald-200',
-        error: 'bg-rose-950/95 border-rose-500/60 text-rose-200',
-        info: 'bg-slate-900/95 border-amber-500/50 text-amber-200'
-      };
-      const icons = {
-        success: 'fa-circle-check text-emerald-400',
-        error: 'fa-circle-exclamation text-rose-400',
-        info: 'fa-sparkles text-amber-400'
-      };
-
-      toast.className = `pointer-events-auto border rounded-xl px-4 py-3 shadow-xl backdrop-blur-md flex items-center gap-2.5 text-xs sm:text-sm font-bold animate-pop-in ${styles[type] || styles.info}`;
-      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
+      toast.className = 'pointer-events-auto border rounded-xl px-4 py-3 shadow-xl bg-slate-900 text-amber-200 text-xs sm:text-sm font-bold flex items-center gap-2';
+      toast.innerHTML = `<span>${escapeHtml(msg)}</span>`;
       container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-6px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 250);
-      }, 3200);
+      setTimeout(() => toast.remove(), 3000);
     }
 
     let confirmCallback = null;
-    function openConfirmModal(title, message, onConfirm) {
-      document.getElementById('confirm-title').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i><span>${escapeHtml(title)}</span>`;
-      document.getElementById('confirm-message').textContent = message;
-      confirmCallback = onConfirm;
+    function openConfirmModal(title, msg, cb) {
+      document.getElementById('confirm-message').textContent = msg;
+      confirmCallback = cb;
       document.getElementById('confirm-modal').classList.remove('hidden');
     }
-
-    window.closeConfirmModal = function() {
-      document.getElementById('confirm-modal').classList.add('hidden');
-      confirmCallback = null;
-    };
-
+    window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.add('hidden');
     document.getElementById('confirm-exec-btn').addEventListener('click', async () => {
-      if (confirmCallback) {
-        await confirmCallback();
-      }
+      if (confirmCallback) await confirmCallback();
       closeConfirmModal();
     });
 
     function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
-    function formatDateTime(ts) {
-      if (!ts) return '';
-      const d = new Date(ts);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${y}/${m}/${day} ${hh}:${mm}`;
-    }
-
-    // アプリ起動
     initAuth();
   </script>
-
 </body>
 </html>
