@@ -88,16 +88,15 @@
   <header class="sticky top-0 z-30 bg-guild-bg/90 backdrop-blur-md border-b border-guild-border">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
 
-      <!-- アプリタイトル ＆ キャラクターアイコン（左上） -->
-      <div class="flex items-center gap-3">
-        <!-- アニメーション付きキャラアバター -->
+      <!-- アプリタイトル ＆ キャラクターアイコン -->
+      <div class="flex items-center gap-3 min-w-0">
         <div id="header-avatar-box" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-0.5 shadow-lg shadow-amber-500/20 flex-shrink-0 animate-float">
           <div class="w-full h-full bg-guild-bg rounded-[14px] flex items-center justify-center text-amber-400 text-xl transition-all" id="header-avatar-icon">
             <i class="fa-solid fa-child"></i>
           </div>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
             <h1 class="font-rpg font-extrabold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400">
               タスクRPG
             </h1>
@@ -160,7 +159,7 @@
           <p class="text-xs text-slate-400 mt-0.5">職業ごとにミッションを設定し、達成するとその職業がレベルアップします。</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="openJobModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
+          <button onclick="openJobModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
             <i class="fa-solid fa-plus"></i><span>新しい職業を追加</span>
           </button>
         </div>
@@ -190,17 +189,17 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- タブ2: デイリークエスト（共通レベル制・3回達成でLVUP） -->
+    <!-- タブ2: デイリークエスト（回数制限＆0時リセット対応） -->
     <!-- ========================================== -->
     <section id="tab-dailies" class="hidden space-y-6 max-w-4xl mx-auto">
-      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-guild-border pb-4">
           <div>
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-calendar-day text-sky-400"></i>
               <span>デイリークエスト修行場</span>
             </h2>
-            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">毎日行う日課を設定しよう！すべてのデイリー達成カウントが累計3回に達するごとに共通レベルがアップします。</p>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">毎日行う日課を設定しよう！累計3回達成するごとに共通レベルがアップします（毎日0時に自動リセット）。</p>
           </div>
           <!-- デイリー共通レベル＆進捗バッジ -->
           <div class="bg-guild-bg border border-sky-500/40 rounded-xl px-4 py-2.5 flex items-center gap-3">
@@ -216,18 +215,24 @@
           </div>
         </div>
 
-        <!-- デイリー追加フォーム -->
-        <form onsubmit="addDailyTask(event)" class="flex gap-2 pt-1">
-          <input type="text" id="daily-title-input" placeholder="例：プログラミング学習30分、水を1L飲む、ストレッチ..." class="flex-1 bg-guild-bg border border-guild-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/20 transition active:scale-95 whitespace-nowrap">
-            <i class="fa-solid fa-plus mr-1"></i>デイリー追加
-          </button>
+        <!-- デイリー追加フォーム（レイアウト崩れ修正済み） -->
+        <form onsubmit="addDailyTask(event)" class="space-y-3 pt-1">
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <input type="text" id="daily-title-input" placeholder="例：プログラミング学習、水を1L飲む..." class="sm:col-span-8 bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+            <div class="sm:col-span-4 flex items-center gap-2">
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-400 mb-1">1日の上限回数</label>
+                <input type="number" id="daily-max-input" value="1" min="1" max="99" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3 py-2 text-sm text-white text-center focus:outline-none focus:border-sky-500" />
+              </div>
+              <button type="submit" class="mt-4 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition active:scale-95 whitespace-nowrap h-[38px]">
+                <i class="fa-solid fa-plus mr-1"></i>追加
+              </button>
+            </div>
+          </div>
         </form>
 
         <!-- デイリークエスト一覧 -->
-        <div id="dailies-list" class="space-y-3 pt-2">
-          <!-- JSで動的描画 -->
-        </div>
+        <div id="dailies-list" class="space-y-3 pt-2"></div>
       </div>
     </section>
 
@@ -235,13 +240,11 @@
     <!-- タブ3: 履歴 ＆ カレンダー機能 -->
     <!-- ========================================== -->
     <section id="tab-logs" class="hidden space-y-6 max-w-4xl mx-auto">
-      
-      <!-- カレンダーカード -->
       <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-calendar-alt text-amber-400"></i>
-            <span id="calendar-month-title">2026年 3月 達成カレンダー</span>
+            <span id="calendar-month-title">達成カレンダー</span>
           </h2>
           <div class="flex items-center gap-1.5">
             <button onclick="changeCalendarMonth(-1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition">
@@ -252,22 +255,12 @@
             </button>
           </div>
         </div>
-
-        <!-- 曜日ヘッダー -->
         <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 pb-1 border-b border-guild-border">
           <span class="text-rose-400">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="text-sky-400">土</span>
         </div>
-
-        <!-- カレンダーの日付グリッド -->
-        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5">
-          <!-- JSで動的描画 -->
-        </div>
-        <div class="text-[11px] text-slate-400 flex items-center gap-2 pt-1">
-          <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span> <span>その日にミッションを達成した日（数字クリックで詳細表示）</span>
-        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
       </div>
 
-      <!-- 達成履歴一覧 -->
       <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -303,7 +296,6 @@
           </div>
           <span id="auth-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">ゲストモード</span>
         </div>
-
         <div class="bg-guild-bg/80 border border-guild-border rounded-xl p-4 space-y-2 text-xs sm:text-sm">
           <div class="flex items-center justify-between">
             <span class="text-slate-400">同期ステータス:</span>
@@ -314,40 +306,15 @@
             <code id="user-uid-display" class="text-[11px] bg-slate-900 px-2 py-1 rounded text-amber-300 font-mono break-all select-all">---</code>
           </div>
         </div>
-
         <div id="auth-forms-container" class="space-y-4 pt-2 border-t border-guild-border">
           <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm flex items-center justify-center gap-2.5 shadow transition active:scale-95">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5" onerror="this.style.display='none'">
             <span>Googleアカウントで連携・ログイン</span>
           </button>
         </div>
-
         <div id="auth-logged-in-actions" class="hidden pt-2 border-t border-guild-border flex justify-end">
           <button onclick="logoutAccount()" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition">
             <i class="fa-solid fa-right-from-bracket mr-1.5"></i>ログアウト
-          </button>
-        </div>
-      </div>
-
-      <!-- サウンド＆バックアップ -->
-      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-database text-amber-400"></i>
-          <span>サウンド設定 ＆ バックアップ</span>
-        </h3>
-        <div class="flex items-center justify-between py-2 border-b border-guild-border">
-          <div>
-            <div class="text-sm font-bold text-white">レベルアップ効果音（ファンファーレ）</div>
-            <div class="text-xs text-slate-400">ミッション達成時にRPG風の電子音を鳴らします</div>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="sound-toggle" checked class="sr-only peer" onchange="toggleSoundSetting()">
-            <div class="w-11 h-6 bg-slate-750 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-          </label>
-        </div>
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button onclick="exportDataJSON()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2">
-            <i class="fa-solid fa-download text-amber-400"></i><span>JSONデータを書き出し</span>
           </button>
         </div>
       </div>
@@ -371,7 +338,7 @@
     </button>
   </nav>
 
-  <!-- モーダル1: 職業の追加・編集 -->
+  <!-- モーダル各種 -->
   <div id="job-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
       <div class="flex items-center justify-between border-b border-guild-border pb-3">
@@ -383,26 +350,25 @@
       <input type="hidden" id="edit-job-id" />
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">職業名（ジャンル名） <span class="text-rose-400">*</span></label>
-          <input type="text" id="job-name-input" placeholder="例：プログラミング、英語学習" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">職業名 <span class="text-rose-400">*</span></label>
+          <input type="text" id="job-name-input" placeholder="例：プログラミング" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">テーマカラー</label>
           <div id="color-picker-grid" class="grid grid-cols-6 gap-2"></div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">ジョブアイコン</label>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">アイコン</label>
           <div id="icon-picker-grid" class="grid grid-cols-6 gap-2 max-h-36 overflow-y-auto p-1"></div>
         </div>
       </div>
       <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
-        <button onclick="closeJobModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold">キャンセル</button>
-        <button onclick="saveJob()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold shadow-lg shadow-amber-500/20">保存する</button>
+        <button onclick="closeJobModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-sm font-bold">キャンセル</button>
+        <button onclick="saveJob()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold">保存する</button>
       </div>
     </div>
   </div>
 
-  <!-- モーダル2: ミッション設定 -->
   <div id="mission-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
       <div class="flex items-center justify-between border-b border-guild-border pb-3">
@@ -415,24 +381,18 @@
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">ミッション内容 <span class="text-rose-400">*</span></label>
-          <input type="text" id="mission-title-input" placeholder="例：チュートリアルを1章終える" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">メモ（任意）</label>
-          <textarea id="mission-memo-input" rows="2" placeholder="メモを入力..." class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
+          <input type="text" id="mission-title-input" placeholder="例：チュートリアルを進める" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
         </div>
       </div>
       <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
-        <button onclick="closeMissionModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-750 text-slate-300 text-sm font-bold">キャンセル</button>
-        <button onclick="saveMission()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold shadow-lg shadow-emerald-500/20">セット</button>
+        <button onclick="closeMissionModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-sm font-bold">キャンセル</button>
+        <button onclick="saveMission()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold">セット</button>
       </div>
     </div>
   </div>
 
-  <!-- モーダル3: レベルアップ祝福演出 -->
   <div id="levelup-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onclick="closeLevelUpModal()">
     <div class="bg-gradient-to-b from-slate-900 to-guild-bg border-2 border-amber-400/80 rounded-3xl w-full max-w-sm p-6 sm:p-8 text-center space-y-5 animate-pop-in gold-glow relative overflow-hidden" onclick="event.stopPropagation()">
-      <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-rpg font-bold tracking-widest uppercase">
         <i class="fa-solid fa-sparkles"></i> LEVEL UP!
       </div>
@@ -441,23 +401,20 @@
       </div>
       <div>
         <div id="levelup-job-name" class="text-sm font-bold text-slate-300">冒険者</div>
-        <h2 class="font-rpg font-extrabold text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 mt-1" id="levelup-title-text">
-          レベルアップ！
-        </h2>
+        <h2 class="font-rpg font-extrabold text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 mt-1" id="levelup-title-text">レベルアップ！</h2>
       </div>
       <p id="levelup-mission-text" class="text-xs text-slate-300 bg-slate-800/60 rounded-xl p-3 border border-slate-700/60">おめでとうございます！</p>
-      <button onclick="closeLevelUpModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition active:scale-95">
+      <button onclick="closeLevelUpModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg transition active:scale-95">
         冒険を続ける
       </button>
     </div>
   </div>
 
-  <!-- モーダル4: カレンダーの日付詳細ポップアップ -->
   <div id="calendar-day-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-sm p-5 space-y-4 animate-pop-in">
       <div class="flex items-center justify-between border-b border-guild-border pb-3">
         <h3 id="cal-modal-date-title" class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-calendar-day text-amber-400"></i><span>2026年3月15日の達成履歴</span>
+          <i class="fa-solid fa-calendar-day text-amber-400"></i><span>達成履歴</span>
         </h3>
         <button onclick="document.getElementById('calendar-day-modal').classList.add('hidden')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -465,7 +422,6 @@
     </div>
   </div>
 
-  <!-- モーダル5: 削除確認 -->
   <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-sm p-5 space-y-4 animate-pop-in">
       <h3 id="confirm-title" class="text-base font-bold text-white flex items-center gap-2">
@@ -483,7 +439,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const JOB_COLORS = [
       { id: 'amber',   name: 'ゴールド',   hex: '#f59e0b', bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/40',   btn: 'bg-amber-500' },
@@ -500,7 +456,6 @@
       'fa-language', 'fa-camera', 'fa-utensils', 'fa-person-running', 'fa-chess-knight', 'fa-compass'
     ];
 
-    // キャラクター進化の定義（総レベルに応じて左上アイコン＆称号が変化）
     function getCharacterEvolution(totalLv) {
       if (totalLv >= 40) return { icon: 'fa-dragon', title: '伝説の英雄' };
       if (totalLv >= 25) return { icon: 'fa-user-ninja', title: '上級マスター' };
@@ -513,8 +468,8 @@
     const state = {
       user: null,
       jobs: [],
-      dailies: [], // デイリークエストリスト { id, title, completedToday, streak }
-      dailyStats: { level: 1, totalCount: 0 }, // デイリー共通レベルと累計達成数
+      dailies: [],
+      dailyStats: { level: 1, totalCount: 0 },
       logs: [],
       selectedColor: 'amber',
       selectedIcon: 'fa-hat-wizard',
@@ -580,6 +535,12 @@
       });
     }
 
+    // 0時リセット判定用のYYYY-MM-DD文字列を取得
+    function getTodayString() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
     function subscribeUserData(uid) {
       if (!db || !uid) return;
       updateSyncUI('syncing', '同期中...');
@@ -589,7 +550,6 @@
       const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
       const metaDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'dailyStats');
 
-      // 職業同期
       state.unsubJobs = onSnapshot(jobsCol, (snapshot) => {
         const list = [];
         snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
@@ -599,15 +559,28 @@
         renderAll();
       });
 
-      // デイリータスク同期
-      state.unsubDailies = onSnapshot(dailiesCol, (snapshot) => {
+      // デイリータスクの同期 ＆ 0時リセットチェック
+      state.unsubDailies = onSnapshot(dailiesCol, async (snapshot) => {
+        const todayStr = getTodayString();
         const list = [];
-        snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
+        
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          // 日付が変わっていたら今日の達成回数を0にリセット
+          if (data.lastResetDate !== todayStr) {
+            data.todayCount = 0;
+            data.lastResetDate = todayStr;
+            updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'dailies', docSnap.id), {
+              todayCount: 0,
+              lastResetDate: todayStr
+            }).catch(() => {});
+          }
+          list.push({ id: docSnap.id, ...data });
+        });
         state.dailies = list;
         renderAll();
       });
 
-      // デイリー共通ステータス同期
       onSnapshot(metaDoc, (docSnap) => {
         if (docSnap.exists()) {
           state.dailyStats = docSnap.data();
@@ -617,7 +590,6 @@
         renderAll();
       });
 
-      // 履歴同期
       state.unsubLogs = onSnapshot(logsCol, (snapshot) => {
         const list = [];
         snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
@@ -627,7 +599,6 @@
       });
     }
 
-    // 認証・Googleログイン
     window.loginWithGoogle = async function() {
       if (!auth) return;
       const provider = new GoogleAuthProvider();
@@ -729,7 +700,6 @@
       document.getElementById('mission-job-id').value = job.id;
       document.getElementById('mission-modal-job-title').textContent = `${job.name} のミッション`;
       document.getElementById('mission-title-input').value = job.currentMission?.title || '';
-      document.getElementById('mission-memo-input').value = job.currentMission?.memo || '';
       document.getElementById('mission-modal').classList.remove('hidden');
     };
     window.closeMissionModal = () => document.getElementById('mission-modal').classList.add('hidden');
@@ -738,11 +708,10 @@
       if (!state.user || !db) return;
       const jobId = document.getElementById('mission-job-id').value;
       const title = document.getElementById('mission-title-input').value.trim();
-      const memo = document.getElementById('mission-memo-input').value.trim();
       if (!title) return showToast('ミッション内容を入力してください', 'error');
 
       await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId), {
-        currentMission: { title, memo, createdAt: Date.now() }
+        currentMission: { title, memo: '', createdAt: Date.now() }
       });
       closeMissionModal();
       showToast('ミッションを受注しました！', 'success');
@@ -760,7 +729,6 @@
       showToast('ミッションを受注しました！', 'success');
     };
 
-    // 職業ミッション達成
     window.completeMission = async function(jobId) {
       if (!state.user || !db) return;
       const job = state.jobs.find(j => j.id === jobId);
@@ -773,7 +741,6 @@
 
       await updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'jobs', jobId), { level: newLevel, currentMission: null });
 
-      // 履歴（カレンダー用データ含む）に記録
       await addDoc(collection(db, 'artifacts', appId, 'users', uid, 'questLogs'), {
         type: 'job',
         jobId: job.id, jobName: job.name, jobIcon: job.icon, jobColorId: job.colorId,
@@ -784,19 +751,29 @@
     };
 
     // ==========================================
-    // デイリークエスト処理（共通レベル・3回達成でLVUP）
+    // デイリークエスト処理（上限回数＆0時リセット対応）
     // ==========================================
     window.addDailyTask = async function(event) {
       event.preventDefault();
       if (!state.user || !db) return;
-      const input = document.getElementById('daily-title-input');
-      const title = input.value.trim();
-      if (!title) return showToast('デイリー内容を入力してください', 'error');
+      const titleInput = document.getElementById('daily-title-input');
+      const maxInput = document.getElementById('daily-max-input');
+      
+      const title = titleInput.value.trim();
+      const maxCount = parseInt(maxInput.value) || 1;
+
+      if (!title) return showToast('デイリークエスト名を入力してください', 'error');
 
       await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'dailies'), {
-        title, createdAt: Date.now()
+        title,
+        maxCount: maxCount,
+        todayCount: 0,
+        lastResetDate: getTodayString(),
+        createdAt: Date.now()
       });
-      input.value = '';
+
+      titleInput.value = '';
+      maxInput.value = '1';
       showToast('デイリークエストを追加しました', 'success');
     };
 
@@ -805,30 +782,42 @@
       const daily = state.dailies.find(d => d.id === dailyId);
       if (!daily) return;
 
+      const todayStr = getTodayString();
+      const currentTodayCount = (daily.lastResetDate === todayStr) ? (daily.todayCount || 0) : 0;
+      const maxCount = daily.maxCount || 1;
+
+      if (currentTodayCount >= maxCount) {
+        return showToast('本日の達成上限回数に達しています！', 'error');
+      }
+
       const uid = state.user.uid;
+      const newTodayCount = currentTodayCount + 1;
+
+      // デイリーの本日達成回数を更新
+      await updateDoc(doc(db, 'artifacts', appId, 'users', uid, 'dailies', dailyId), {
+        todayCount: newTodayCount,
+        lastResetDate: todayStr
+      });
+
+      // 共通レベルの更新（3回達成ごと）
       const currentStats = state.dailyStats || { level: 1, totalCount: 0 };
       const newTotal = currentStats.totalCount + 1;
       let newLevel = currentStats.level;
-
-      // 3回達成ごとに共通レベルアップ！
       let leveledUp = false;
+
       if (newTotal % 3 === 0) {
         newLevel += 1;
         leveledUp = true;
       }
 
-      // 共通ステータス更新
       const metaDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'dailyStats');
       await updateDoc(metaDoc, { level: newLevel, totalCount: newTotal }).catch(async () => {
-        // ドキュメント未作成時のフォールバック用set
-        const { setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         await setDoc(metaDoc, { level: newLevel, totalCount: newTotal });
       });
 
-      // 履歴に追加（カレンダーに反映）
       await addDoc(collection(db, 'artifacts', appId, 'users', uid, 'questLogs'), {
         type: 'daily',
-        missionTitle: `[デイリー] ${daily.title}`,
+        missionTitle: `[デイリー] ${daily.title} (${newTodayCount}/${maxCount})`,
         newLevel: newLevel,
         clearedAt: Date.now()
       });
@@ -836,7 +825,7 @@
       if (leveledUp) {
         triggerLevelUpCelebration('デイリー共通修行', `Lv.${newLevel - 1} → Lv.${newLevel}`, `デイリー累計3回達成！共通レベルがアップしました！`, 'fa-shield-heart', 'sky');
       } else {
-        showToast(`「${daily.title}」達成！ (あと ${3 - (newTotal % 3)} 回で共通LvUP)`, 'success');
+        showToast(`「${daily.title}」達成！ (${newTodayCount}/${maxCount})`, 'success');
       }
     };
 
@@ -846,7 +835,6 @@
       showToast('デイリーを削除しました', 'info');
     };
 
-    // 演出
     function triggerLevelUpCelebration(name, subtitle, desc, icon, colorId) {
       const colorObj = JOB_COLORS.find(c => c.id === colorId) || JOB_COLORS[0];
       const iconBox = document.getElementById('levelup-icon-box');
@@ -875,20 +863,12 @@
       }
     }
     window.closeLevelUpModal = () => document.getElementById('levelup-modal').classList.add('hidden');
-    window.toggleSoundSetting = () => state.soundEnabled = document.getElementById('sound-toggle').checked;
 
-    // ==========================================
-    // カレンダー機能
-    // ==========================================
+    // カレンダー
     window.changeCalendarMonth = function(direction) {
       state.calendarMonth += direction;
-      if (state.calendarMonth > 11) {
-        state.calendarMonth = 0;
-        state.calendarYear += 1;
-      } else if (state.calendarMonth < 0) {
-        state.calendarMonth = 11;
-        state.calendarYear -= 1;
-      }
+      if (state.calendarMonth > 11) { state.calendarMonth = 0; state.calendarYear += 1; }
+      else if (state.calendarMonth < 0) { state.calendarMonth = 11; state.calendarYear -= 1; }
       renderCalendar();
     };
 
@@ -901,7 +881,6 @@
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month + 1, 0).getDate();
 
-      // その月に達成されたログを日付ごとにマッピング
       const clearedDays = {};
       state.logs.forEach(log => {
         const d = new Date(log.clearedAt);
@@ -913,16 +892,12 @@
       });
 
       let html = '';
-      // 空白セル
       for (let i = 0; i < firstDay; i++) {
         html += `<div class="h-10 rounded-xl bg-guild-bg/20 border border-transparent"></div>`;
       }
-
-      // 日付セル
       for (let day = 1; day <= lastDate; day++) {
         const hasCleared = clearedDays[day] && clearedDays[day].length > 0;
         const bgClass = hasCleared ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold cursor-pointer hover:bg-amber-500/30' : 'bg-guild-bg border-guild-border text-slate-400';
-        
         html += `
           <div onclick="openCalendarDayModal(${year}, ${month}, ${day})" class="h-10 rounded-xl border flex flex-col items-center justify-center relative transition ${bgClass}">
             <span class="text-xs">${day}</span>
@@ -947,18 +922,18 @@
       } else {
         container.innerHTML = targetLogs.map(l => `
           <div class="bg-guild-bg border border-guild-border rounded-xl p-3 flex items-center justify-between gap-2 text-xs">
-            <div>
-              <span class="font-bold text-amber-300">${escapeHtml(l.jobName || 'デイリー')}</span>
-              <p class="text-white font-medium mt-0.5">${escapeHtml(l.missionTitle)}</p>
+            <div class="min-w-0">
+              <span class="font-bold text-amber-300 truncate block">${escapeHtml(l.jobName || 'デイリー修行')}</span>
+              <p class="text-white font-medium mt-0.5 truncate">${escapeHtml(l.missionTitle)}</p>
             </div>
             <span class="text-[10px] text-emerald-400 font-bold whitespace-nowrap">Lv.${l.newLevel}</span>
           </div>
         `).join('');
       }
-      document.getElementById('calendar-day-modal').classList.remove('hidden');
+      document.getElementById('calendar-day-modal').classList.add('hidden');
+      setTimeout(() => document.getElementById('calendar-day-modal').classList.remove('hidden'), 50);
     };
 
-    // レンダリング統合
     function renderAll() {
       renderHeaderStats();
       renderJobsGrid();
@@ -974,7 +949,6 @@
       document.getElementById('total-level-display').textContent = `Lv.${displayTotal}`;
       document.getElementById('total-cleared-display').textContent = `${state.logs.length}件`;
 
-      // キャラクター進化計算
       const charInfo = getCharacterEvolution(displayTotal);
       document.getElementById('adventurer-rank-badge').textContent = charInfo.title;
       document.getElementById('header-avatar-icon').innerHTML = `<i class="fa-solid ${charInfo.icon}"></i>`;
@@ -1004,7 +978,7 @@
                   <span class="text-[11px] font-bold ${c.text}">挑戦中のミッション</span>
                   <button onclick="openMissionModal('${job.id}')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
                 </div>
-                <h4 class="text-base font-bold text-white">${escapeHtml(m.title)}</h4>
+                <h4 class="text-base font-bold text-white break-all">${escapeHtml(m.title)}</h4>
               </div>
               <button onclick="completeMission('${job.id}')" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
                 <i class="fa-solid fa-circle-check"></i><span>ミッション達成！（Lv.${Number(job.level) + 1}へ）</span>
@@ -1018,7 +992,7 @@
               <form onsubmit="quickSetMission(event, '${job.id}')" class="space-y-2">
                 <div class="flex gap-1.5">
                   <input type="text" id="quick-input-${job.id}" placeholder="ミッションを入力..." class="flex-1 bg-guild-bg border border-guild-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500" />
-                  <button type="submit" class="px-3 py-2 rounded-xl ${c.btn} text-slate-950 font-bold text-xs">受注</button>
+                  <button type="submit" class="px-3 py-2 rounded-xl ${c.btn} text-slate-950 font-bold text-xs whitespace-nowrap">受注</button>
                 </div>
               </form>
             </div>
@@ -1028,16 +1002,16 @@
         return `
           <article class="bg-guild-card border border-guild-border rounded-2xl p-5 flex flex-col gap-4 shadow-lg">
             <div class="flex items-start justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text}">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text} flex-shrink-0">
                   <i class="fa-solid ${job.icon}"></i>
                 </div>
-                <div>
-                  <h3 class="font-bold text-base text-white">${escapeHtml(job.name)}</h3>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-base text-white truncate">${escapeHtml(job.name)}</h3>
                   <span class="font-rpg font-extrabold text-sm ${c.text}">Lv.${job.level}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1 flex-shrink-0">
                 <button onclick="openMissionModal('${job.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white"><i class="fa-solid fa-gear text-xs"></i></button>
                 <button onclick="confirmDeleteJob('${job.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash-can text-xs"></i></button>
               </div>
@@ -1061,22 +1035,33 @@
         return;
       }
 
-      container.innerHTML = state.dailies.map(d => `
-        <div class="bg-guild-bg border border-guild-border rounded-xl p-4 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 flex-shrink-0">
-              <i class="fa-solid fa-calendar-day"></i>
+      const todayStr = getTodayString();
+
+      container.innerHTML = state.dailies.map(d => {
+        const todayCount = (d.lastResetDate === todayStr) ? (d.todayCount || 0) : 0;
+        const maxCount = d.maxCount || 1;
+        const isCompleted = todayCount >= maxCount;
+
+        return `
+          <div class="bg-guild-bg border border-guild-border rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 flex-shrink-0">
+                <i class="fa-solid fa-calendar-day"></i>
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold text-white break-all">${escapeHtml(d.title)}</h4>
+                <span class="text-[11px] text-slate-400">本日の達成: <strong class="${isCompleted ? 'text-emerald-400' : 'text-amber-400'}">${todayCount} / ${maxCount} 回</strong></span>
+              </div>
             </div>
-            <h4 class="text-sm font-bold text-white truncate">${escapeHtml(d.title)}</h4>
+            <div class="flex items-center gap-2 justify-end flex-shrink-0">
+              <button onclick="completeDailyTask('${d.id}')" ${isCompleted ? 'disabled' : ''} class="px-4 py-2 rounded-xl ${isCompleted ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold shadow active:scale-95'} text-xs flex items-center gap-1.5 transition">
+                <i class="fa-solid ${isCompleted ? 'fa-check-double' : 'fa-check'}"></i><span>${isCompleted ? '完了済み' : '達成 (+1)'}</span>
+              </button>
+              <button onclick="deleteDailyTask('${d.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            </div>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <button onclick="completeDailyTask('${d.id}')" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow active:scale-95 transition">
-              <i class="fa-solid fa-check"></i><span>達成 (+1)</span>
-            </button>
-            <button onclick="deleteDailyTask('${d.id}')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     window.renderLogs = function() {
@@ -1106,10 +1091,10 @@
               </div>
               <div class="min-w-0">
                 <span class="text-xs font-bold ${c.text}">${escapeHtml(isDaily ? 'デイリー修行' : log.jobName)} (Lv.${log.newLevel})</span>
-                <p class="text-sm font-bold text-white truncate mt-0.5">${escapeHtml(log.missionTitle)}</p>
+                <p class="text-sm font-bold text-white break-all mt-0.5">${escapeHtml(log.missionTitle)}</p>
               </div>
             </div>
-            <span class="text-[11px] text-slate-400 whitespace-nowrap">${dateStr}</span>
+            <span class="text-[11px] text-slate-400 whitespace-nowrap flex-shrink-0">${dateStr}</span>
           </div>
         `;
       }).join('');
