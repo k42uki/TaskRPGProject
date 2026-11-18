@@ -10,7 +10,7 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Cinzel Decorative, Cormorant Garamond & Shippori Mincho -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@600;700;800&display=swap" rel="stylesheet">
@@ -34,15 +34,15 @@
           },
           colors: {
             hyrule: {
-              bg: '#0c100e',        // 深い森と石造りの夜
-              panel: '#141a17',     // 古びた神殿の石板
+              bg: '#0c100e',
+              panel: '#141a17',
               panelHover: '#1b241f',
-              border: '#3a3322',    // 真鍮・アンティーク枠
-              gold: '#d4af37',      // 黄金の聖三角
-              goldLight: '#f3e5ab', // 羊皮紙の光沢
-              emerald: '#10b981',   // コキリ・エメラルド
-              sapphire: '#2563eb',  // ゾーラ・サファイア
-              ruby: '#e11d48',      // ゴロン・ルビー
+              border: '#3a3322',
+              gold: '#d4af37',
+              goldLight: '#f3e5ab',
+              emerald: '#10b981',
+              sapphire: '#2563eb',
+              ruby: '#e11d48',
             }
           },
           keyframes: {
@@ -77,7 +77,6 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* ハイラル神殿の石畳と魔法陣の淡い光 */
     .bg-hyrule-temple {
       background-color: #0c100e;
       background-image: 
@@ -88,7 +87,6 @@
       background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
     }
 
-    /* 時のオカリナのメニュー画面風・四隅装飾パネル */
     .oot-panel {
       position: relative;
       background: linear-gradient(160deg, rgba(23, 29, 25, 0.96) 0%, rgba(15, 19, 17, 0.98) 100%);
@@ -117,12 +115,10 @@
       border-width: 0 1.5px 1.5px 0;
     }
 
-    /* 聖三角の黄金グロー */
     .triforce-glow {
       box-shadow: 0 0 28px rgba(212, 175, 55, 0.32), inset 0 0 16px rgba(212, 175, 55, 0.12);
     }
 
-    /* CSSトライフォース装飾 */
     .triforce-emblem {
       display: inline-grid;
       grid-template-columns: repeat(2, 6px);
@@ -138,21 +134,9 @@
       border-right: 3px solid transparent;
       border-bottom: 5px solid #d4af37;
     }
-    .tri-top {
-      position: absolute;
-      top: 0;
-      left: 3.5px;
-    }
-    .tri-bl {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
-    .tri-br {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-    }
+    .tri-top { position: absolute; top: 0; left: 3.5px; }
+    .tri-bl { position: absolute; bottom: 0; left: 0; }
+    .tri-br { position: absolute; bottom: 0; right: 0; }
 
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0c100e; }
@@ -167,8 +151,8 @@
 
       <!-- アプリタイトル ＆ キャラクターアイコン -->
       <div class="flex items-center gap-3 min-w-0">
-        <div id="header-avatar-box" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f3e5ab] via-[#d4af37] to-[#8a6d1c] p-0.5 shadow-lg shadow-[#d4af37]/20 flex-shrink-0 animate-float">
-          <div class="w-full h-full bg-[#111613] rounded-[14px] flex items-center justify-center text-[#f3e5ab] text-xl transition-all" id="header-avatar-icon">
+        <div id="header-avatar-box" onclick="switchTab('settings')" title="タップしてアイコン設定を変更" class="cursor-pointer w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f3e5ab] via-[#d4af37] to-[#8a6d1c] p-0.5 shadow-lg shadow-[#d4af37]/20 flex-shrink-0 animate-float">
+          <div class="w-full h-full bg-[#111613] rounded-[14px] flex items-center justify-center text-[#f3e5ab] text-xl transition-all overflow-hidden" id="header-avatar-icon">
             <i class="fa-solid fa-child"></i>
           </div>
         </div>
@@ -300,13 +284,13 @@
         <!-- デイリー追加フォーム -->
         <form onsubmit="addDailyTask(event)" class="space-y-3 pt-1">
           <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-            <input type="text" id="daily-title-input" placeholder="例：剣の素振り、聖水（水）を1L飲む..." class="sm:col-span-8 bg-[#0c100e] border border-[#d4af37]/30 rounded-xl px-3.5 py-2.5 text-sm text-[#ede8dc] placeholder-[#6e6a5f] focus:outline-none focus:border-[#d4af37]" />
+            <input type="text" id="daily-title-input" placeholder="例：剣の素振り、聖水（水）を1L飲む..." class="w-full min-w-0 sm:col-span-8 bg-[#0c100e] border border-[#d4af37]/30 rounded-xl px-3.5 py-2.5 text-sm text-[#ede8dc] placeholder-[#6e6a5f] focus:outline-none focus:border-[#d4af37]" />
             <div class="sm:col-span-4 flex items-center gap-2">
-              <div class="flex-1">
+              <div class="flex-1 min-w-0">
                 <label class="block text-[10px] font-bold text-[#a8a293] mb-1">1日の上限回数</label>
                 <input type="number" id="daily-max-input" value="1" min="1" max="99" class="w-full bg-[#0c100e] border border-[#d4af37]/30 rounded-xl px-3 py-2 text-sm text-[#f3e5ab] text-center focus:outline-none focus:border-[#d4af37]" />
               </div>
-              <button type="submit" class="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b59128] hover:brightness-110 text-[#0c100e] font-serif font-extrabold text-xs sm:text-sm shadow-lg shadow-[#d4af37]/20 transition active:scale-95 whitespace-nowrap h-[38px]">
+              <button type="submit" class="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b59128] hover:brightness-110 text-[#0c100e] font-serif font-extrabold text-xs sm:text-sm shadow-lg shadow-[#d4af37]/20 transition active:scale-95 whitespace-nowrap h-[38px] flex-shrink-0">
                 <i class="fa-solid fa-plus mr-1"></i>追加
               </button>
             </div>
@@ -364,9 +348,28 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- タブ4: 設定・同期 -->
+    <!-- タブ4: 設定・同期 ＆ キャラクター画像カスタマイズ -->
     <!-- ========================================== -->
     <section id="tab-settings" class="hidden space-y-6 max-w-3xl mx-auto">
+
+      <!-- キャラクター画像・進化カスタム設定カード（新規追加） -->
+      <div class="oot-panel rounded-2xl p-5 sm:p-6 space-y-5">
+        <div class="border-b border-[#d4af37]/25 pb-3">
+          <h2 class="text-lg font-serif font-bold text-[#f3e5ab] flex items-center gap-2">
+            <i class="fa-solid fa-user-astronaut text-[#d4af37]"></i>
+            <span>冒険者の姿・レベル別アイコン設定</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-[#a8a293] mt-1">
+            総レベルが上がるごとに変化する左上のアイコンに、お好きな画像（写真やイラスト）を設定できます。未設定の段階はデフォルトの紋章が表示されます。
+          </p>
+        </div>
+
+        <div id="avatar-stages-settings" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- JSで6段階のレベル別スロットを自動描画 -->
+        </div>
+      </div>
+
+      <!-- 時空の同期カード -->
       <div class="oot-panel rounded-2xl p-5 sm:p-6 space-y-5">
         <div class="flex items-start justify-between gap-4">
           <div>
@@ -488,14 +491,14 @@
     </div>
   </div>
 
-  <!-- モーダル3: レベルアップ祝福演出（聖三角＆宝箱ファンファーレ） -->
+  <!-- モーダル3: レベルアップ祝福演出 -->
   <div id="levelup-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" onclick="closeLevelUpModal()">
     <div class="oot-panel rounded-3xl w-full max-w-sm p-6 sm:p-8 text-center space-y-5 animate-pop-in triforce-glow relative overflow-hidden" onclick="event.stopPropagation()">
       <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#f3e5ab] text-xs font-rpg font-bold tracking-widest uppercase">
         <span class="triforce-emblem"><span class="tri-piece tri-top"></span><span class="tri-piece tri-bl"></span><span class="tri-piece tri-br"></span></span>
         <span>TRIAL CLEARED!</span>
       </div>
-      <div id="levelup-icon-box" class="w-20 h-20 mx-auto rounded-2xl bg-[#d4af37]/20 border-2 border-[#d4af37] flex items-center justify-center text-4xl text-[#f3e5ab] shadow-lg">
+      <div id="levelup-icon-box" class="w-20 h-20 mx-auto rounded-2xl bg-[#d4af37]/20 border-2 border-[#d4af37] flex items-center justify-center text-4xl text-[#f3e5ab] shadow-lg overflow-hidden">
         <i class="fa-solid fa-crown"></i>
       </div>
       <div>
@@ -542,7 +545,6 @@
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // ハイラル精霊石＆紋章カラーパレット
     const JOB_COLORS = [
       { id: 'amber',   name: '聖三角ゴールド', hex: '#d4af37', bg: 'bg-[#d4af37]/15',   text: 'text-[#f3e5ab]',   border: 'border-[#d4af37]/45',   btn: 'bg-[#d4af37]' },
       { id: 'emerald', name: 'コキリ翠玉',     hex: '#10b981', bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/45', btn: 'bg-emerald-500' },
@@ -558,14 +560,28 @@
       'fa-coins', 'fa-heart-pulse', 'fa-language', 'fa-camera', 'fa-person-running', 'fa-compass'
     ];
 
-    // 時オカ風の称号＆進化アイコン
+    // レベルごとの進化ステージ定義
+    const AVATAR_STAGES = [
+      { id: 'stage1', minLv: 1,  label: 'Lv.1〜2',  defaultIcon: 'fa-child',          title: 'コキリの少年' },
+      { id: 'stage2', minLv: 3,  label: 'Lv.3〜7',  defaultIcon: 'fa-person-walking', title: '旅立ちの少年' },
+      { id: 'stage3', minLv: 8,  label: 'Lv.8〜14', defaultIcon: 'fa-shield-halved',  title: 'ハイラル騎士見習い' },
+      { id: 'stage4', minLv: 15, label: 'Lv.15〜24',defaultIcon: 'fa-chess-knight',   title: 'マスターソードの使い手' },
+      { id: 'stage5', minLv: 25, label: 'Lv.25〜39',defaultIcon: 'fa-crown',          title: '七賢者の導き手' },
+      { id: 'stage6', minLv: 40, label: 'Lv.40以上',defaultIcon: 'fa-dragon',         title: '時の勇者' }
+    ];
+
     function getCharacterEvolution(totalLv) {
-      if (totalLv >= 40) return { icon: 'fa-dragon', title: '時の勇者' };
-      if (totalLv >= 25) return { icon: 'fa-crown', title: '七賢者の導き手' };
-      if (totalLv >= 15) return { icon: 'fa-chess-knight', title: 'マスターソードの使い手' };
-      if (totalLv >= 8)  return { icon: 'fa-shield-halved', title: 'ハイラル騎士見習い' };
-      if (totalLv >= 3)  return { icon: 'fa-person-walking', title: '旅立ちの少年' };
-      return { icon: 'fa-child', title: 'コキリの少年' };
+      let currentStage = AVATAR_STAGES[0];
+      for (const s of AVATAR_STAGES) {
+        if (totalLv >= s.minLv) currentStage = s;
+      }
+      const customImage = state.customAvatars[currentStage.id] || null;
+      return {
+        stageId: currentStage.id,
+        icon: currentStage.defaultIcon,
+        title: currentStage.title,
+        customImage
+      };
     }
 
     const state = {
@@ -573,6 +589,7 @@
       jobs: [],
       dailies: [],
       dailyStats: { level: 1, totalCount: 0 },
+      customAvatars: {}, // { stage1: "data:image/...", stage2: ... }
       logs: [],
       selectedColor: 'amber',
       selectedIcon: 'fa-hat-wizard',
@@ -651,6 +668,7 @@
       const dailiesCol = collection(db, 'artifacts', appId, 'users', uid, 'dailies');
       const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
       const metaDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'dailyStats');
+      const avatarsDoc = doc(db, 'artifacts', appId, 'users', uid, 'meta', 'customAvatars');
 
       state.unsubJobs = onSnapshot(jobsCol, (snapshot) => {
         const list = [];
@@ -689,6 +707,15 @@
         renderAll();
       });
 
+      onSnapshot(avatarsDoc, (docSnap) => {
+        if (docSnap.exists()) {
+          state.customAvatars = docSnap.data() || {};
+        } else {
+          state.customAvatars = {};
+        }
+        renderAll();
+      });
+
       state.unsubLogs = onSnapshot(logsCol, (snapshot) => {
         const list = [];
         snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() }));
@@ -696,6 +723,95 @@
         state.logs = list;
         renderAll();
       });
+    }
+
+    // ==========================================
+    // レベル別カスタム画像アップロード・圧縮・削除処理
+    // ==========================================
+    window.handleAvatarUpload = function(event, stageId) {
+      const file = event.target.files[0];
+      if (!file || !state.user || !db) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = async function() {
+          // Firestore容量制限対策＆高画質維持のため 160x160 にリサイズ圧縮
+          const canvas = document.createElement('canvas');
+          const size = 160;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+
+          // 正方形に中央トリミングして描画
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          try {
+            const avatarsDoc = doc(db, 'artifacts', appId, 'users', state.user.uid, 'meta', 'customAvatars');
+            await setDoc(avatarsDoc, { [stageId]: compressedDataUrl }, { merge: true });
+            showToast('冒険者の姿を更新しました！', 'success');
+          } catch (err) {
+            console.error('Avatar save error:', err);
+            showToast('画像の保存に失敗しました', 'error');
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    };
+
+    window.resetAvatarStage = async function(stageId) {
+      if (!state.user || !db) return;
+      try {
+        const avatarsDoc = doc(db, 'artifacts', appId, 'users', state.user.uid, 'meta', 'customAvatars');
+        await setDoc(avatarsDoc, { [stageId]: null }, { merge: true });
+        showToast('初期アイコンに戻しました', 'info');
+      } catch (err) {
+        showToast('リセットに失敗しました', 'error');
+      }
+    };
+
+    function renderAvatarSettings() {
+      const container = document.getElementById('avatar-stages-settings');
+      if (!container) return;
+
+      container.innerHTML = AVATAR_STAGES.map(stage => {
+        const customImg = state.customAvatars[stage.id];
+        const previewHtml = customImg
+          ? `<img src="${customImg}" alt="${stage.title}" class="w-full h-full object-cover" />`
+          : `<i class="fa-solid ${stage.defaultIcon} text-xl text-[#f3e5ab]"></i>`;
+
+        return `
+          <div class="bg-[#0c100e]/90 border border-[#d4af37]/30 rounded-xl p-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-12 h-12 rounded-xl bg-[#141a17] border border-[#d4af37]/50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                ${previewHtml}
+              </div>
+              <div class="min-w-0">
+                <span class="text-[10px] font-rpg font-bold px-2 py-0.5 rounded bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30">${stage.label}</span>
+                <div class="text-xs sm:text-sm font-serif font-bold text-[#ede8dc] truncate mt-1">${stage.title}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#d4af37] to-[#b59128] hover:brightness-110 text-[#0c100e] font-serif font-extrabold text-xs transition active:scale-95">
+                <i class="fa-solid fa-image mr-1"></i>変更
+                <input type="file" accept="image/*" onchange="handleAvatarUpload(event, '${stage.id}')" class="hidden" />
+              </label>
+              ${customImg ? `
+                <button onclick="resetAvatarStage('${stage.id}')" title="初期アイコンに戻す" class="w-7 h-7 rounded-lg bg-[#141a17] border border-[#d4af37]/30 text-[#a8a293] hover:text-rose-400 flex items-center justify-center text-xs transition">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     window.loginWithGoogle = async function() {
@@ -927,11 +1043,10 @@
       showToast('修行を削除しました', 'info');
     };
 
-    // 時のオカリナ「宝箱オープン / アイテムゲット」風の神秘的なファンファーレ音色
     function triggerLevelUpCelebration(name, subtitle, desc, icon, colorId) {
       const colorObj = JOB_COLORS.find(c => c.id === colorId) || JOB_COLORS[0];
       const iconBox = document.getElementById('levelup-icon-box');
-      iconBox.className = `w-20 h-20 mx-auto rounded-2xl ${colorObj.bg} border-2 ${colorObj.border} flex items-center justify-center text-4xl ${colorObj.text} shadow-lg`;
+      iconBox.className = `w-20 h-20 mx-auto rounded-2xl ${colorObj.bg} border-2 ${colorObj.border} flex items-center justify-center text-4xl ${colorObj.text} shadow-lg overflow-hidden`;
       iconBox.innerHTML = `<i class="fa-solid ${icon}"></i>`;
 
       document.getElementById('levelup-job-name').textContent = name;
@@ -945,14 +1060,12 @@
       if (state.soundEnabled && typeof Tone !== 'undefined') {
         try {
           Tone.start();
-          // オカリナ＆ハープ風の柔らかい音色
           const synth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: 'sine' },
             envelope: { attack: 0.04, decay: 0.2, sustain: 0.4, release: 0.9 }
           }).toDestination();
           synth.volume.value = -6;
           const now = Tone.now();
-          // 時オカのアイテム取得（ラ・ラ♯・シ・ド♯ の上昇フレーズ風）
           synth.triggerAttackRelease('A4', '16n', now);
           synth.triggerAttackRelease('Bb4', '16n', now + 0.14);
           synth.triggerAttackRelease('B4', '16n', now + 0.28);
@@ -1036,6 +1149,7 @@
       renderDailiesList();
       renderCalendar();
       renderLogs();
+      renderAvatarSettings();
     }
 
     function renderHeaderStats() {
@@ -1047,7 +1161,13 @@
 
       const charInfo = getCharacterEvolution(displayTotal);
       document.getElementById('adventurer-rank-badge').textContent = charInfo.title;
-      document.getElementById('header-avatar-icon').innerHTML = `<i class="fa-solid ${charInfo.icon}"></i>`;
+
+      const avatarBox = document.getElementById('header-avatar-icon');
+      if (charInfo.customImage) {
+        avatarBox.innerHTML = `<img src="${charInfo.customImage}" alt="${charInfo.title}" class="w-full h-full object-cover" />`;
+      } else {
+        avatarBox.innerHTML = `<i class="fa-solid ${charInfo.icon}"></i>`;
+      }
     }
 
     function renderJobsGrid() {
@@ -1082,13 +1202,14 @@
             </div>
           `;
         } else {
+          // 入力フォームが枠からはみ出さないように min-w-0 と flex-shrink-0 を適用
           missionBlock = `
-            <div class="flex-1 flex flex-col justify-between bg-[#0c100e]/60 border border-dashed border-[#d4af37]/30 rounded-xl p-4 space-y-3">
-              <div class="text-center py-2"><span class="text-xs font-serif font-bold text-[#a8a293]">現在、試練は授かっていない</span></div>
-              <form onsubmit="quickSetMission(event, '${job.id}')" class="space-y-2">
-                <div class="flex gap-1.5">
-                  <input type="text" id="quick-input-${job.id}" placeholder="新たな試練を入力..." class="flex-1 bg-[#0c100e] border border-[#d4af37]/30 rounded-xl px-3 py-2 text-xs text-[#ede8dc] focus:outline-none focus:border-[#d4af37]" />
-                  <button type="submit" class="px-3 py-2 rounded-xl ${c.btn} text-[#0c100e] font-serif font-extrabold text-xs whitespace-nowrap">受注</button>
+            <div class="flex-1 flex flex-col justify-between bg-[#0c100e]/60 border border-dashed border-[#d4af37]/30 rounded-xl p-3.5 sm:p-4 space-y-3 overflow-hidden">
+              <div class="text-center py-1.5"><span class="text-xs font-serif font-bold text-[#a8a293]">現在、試練は授かっていない</span></div>
+              <form onsubmit="quickSetMission(event, '${job.id}')" class="w-full">
+                <div class="flex items-center gap-1.5 w-full">
+                  <input type="text" id="quick-input-${job.id}" placeholder="新たな試練を入力..." class="flex-1 min-w-0 w-full bg-[#0c100e] border border-[#d4af37]/30 rounded-xl px-3 py-2 text-xs text-[#ede8dc] focus:outline-none focus:border-[#d4af37]" />
+                  <button type="submit" class="px-3.5 py-2 rounded-xl ${c.btn} text-[#0c100e] font-serif font-extrabold text-xs whitespace-nowrap flex-shrink-0">受注</button>
                 </div>
               </form>
             </div>
@@ -1096,7 +1217,7 @@
         }
 
         return `
-          <article class="oot-panel rounded-2xl p-5 flex flex-col gap-4">
+          <article class="oot-panel rounded-2xl p-4 sm:p-5 flex flex-col gap-4 overflow-hidden">
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text} flex-shrink-0">
