@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="タスクRPG" />
+  <title>タスクRPG - 職業別ミッション＆レベルアップ</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cinzel & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Canvas Confetti for Level Up Celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <!-- Tone.js for RPG Sound Effects (Web Audio Synthesizer) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', 'sans-serif'],
+            rpg: ['"Cinzel"', '"Noto Sans JP"', 'serif'],
+          },
+          colors: {
+            guild: {
+              bg: '#0b0f19',
+              card: '#131a2a',
+              cardHover: '#192236',
+              border: '#26324d',
+              gold: '#f59e0b',
+              goldLight: '#fde68a',
+              emerald: '#10b981',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'pop-in': 'popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+          },
+          keyframes: {
+            popIn: {
+              '0%': { opacity: '0', transform: 'scale(0.85) translateY(10px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* RPG風の微細なグリッド背景 */
+    .bg-guild-pattern {
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+        linear-gradient(to right, rgba(38, 50, 77, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(38, 50, 77, 0.25) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+    }
+
+    /* ゴールドの枠線・光沢エフェクト */
+    .gold-glow {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+    }
+
+    /* カスタムスクロールバー */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #26324d;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b4d75;
+    }
+  </style>
+</head>
+<body class="bg-guild-pattern min-h-screen flex flex-col antialiased selection:bg-amber-500/30 selection:text-amber-200">
+
+  <!-- トップヘッダー（冒険者ステータス＆同期状況） -->
+  <header class="sticky top-0 z-30 bg-guild-bg/90 backdrop-blur-md border-b border-guild-border">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+
+      <!-- アプリタイトル＆総合ランク -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600 p-0.5 shadow-lg shadow-amber-500/20 flex-shrink-0">
+          <div class="w-full h-full bg-guild-bg rounded-[10px] flex items-center justify-center text-amber-400 text-xl">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-rpg font-extrabold text-lg sm:text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400">
+              タスクRPG
+            </h1>
+            <span id="adventurer-rank-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              見習い冒険者
+            </span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-slate-400 mt-0.5">
+            <span>総レベル: <strong id="total-level-display" class="text-amber-400 font-rpg text-sm">Lv.1</strong></span>
+            <span>•</span>
+            <span>達成数: <strong id="total-cleared-display" class="text-emerald-400">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PC用ナビゲーションタブ（デスクトップのみ表示） -->
+      <nav class="hidden md:flex items-center bg-guild-card p-1 rounded-xl border border-guild-border">
+        <button onclick="switchTab('quests')" id="nav-pc-quests" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-amber-500 text-slate-950 shadow">
+          <i class="fa-solid fa-swords mr-1.5"></i>職業・ミッション
+        </button>
+        <button onclick="switchTab('logs')" id="nav-pc-logs" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all">
+          <i class="fa-solid fa-scroll mr-1.5"></i>達成履歴
+        </button>
+        <button onclick="switchTab('settings')" id="nav-pc-settings" class="pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all">
+          <i class="fa-solid fa-gear mr-1.5"></i>データ同期・設定
+        </button>
+      </nav>
+
+      <!-- クラウド同期ステータス＆アカウントボタン -->
+      <div class="flex items-center gap-2">
+        <button onclick="switchTab('settings')" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-guild-card hover:bg-guild-cardHover border border-guild-border transition text-xs">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="sync-status-text" class="text-slate-300 font-medium max-w-[110px] sm:max-w-[160px] truncate">接続確認中...</span>
+          <i class="fa-solid fa-cloud text-slate-400"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- メインコンテンツエリア -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 pb-28 md:pb-10">
+
+    <!-- トースト通知エリア（alertの代替） -->
+    <div id="toast-container" class="fixed top-16 right-4 left-4 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- タブ1: 職業（ジャンル）＆ミッション一覧 -->
+    <!-- ========================================== -->
+    <section id="tab-quests" class="space-y-6">
+      
+      <!-- アクションバー -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-guild-card/80 border border-guild-border rounded-2xl p-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-crown text-amber-400"></i>
+            <span>ジョブステータス ＆ 受注ミッション</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">職業ごとに1つのミッションを設定し、達成するとその職業がレベルアップします。</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openJobModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>新しい職業を追加</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 初期プリセット案内（職業が0個の時に強調表示） -->
+      <div id="empty-jobs-banner" class="hidden bg-guild-card border-2 border-dashed border-guild-border rounded-2xl p-6 sm:p-8 text-center space-y-4">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl text-amber-400">
+          <i class="fa-solid fa-hat-wizard"></i>
+        </div>
+        <div class="max-w-md mx-auto">
+          <h3 class="text-lg font-bold text-white">まだ職業（ジャンル）が登録されていません</h3>
+          <p class="text-sm text-slate-400 mt-1">
+            まずはあなたの成長させたいジャンルを「職業」として作成するか、下のサンプル職業をワンクリックで追加して冒険を始めましょう！
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+          <button onclick="addPresetJobs()" class="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition active:scale-95">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>サンプル職業3種を一括追加
+          </button>
+          <button onclick="openJobModal()" class="px-5 py-3 rounded-xl bg-guild-cardHover hover:bg-slate-800 text-white border border-guild-border font-bold text-sm transition active:scale-95">
+            <i class="fa-solid fa-pen mr-1.5"></i>自分で職業を作る
+          </button>
+        </div>
+      </div>
+
+      <!-- 職業カードグリッド（スマホ1列 / タブレット2列 / PC3列） -->
+      <div id="jobs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- JSで動的に描画 -->
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- タブ2: 達成履歴（クエストログ） -->
+    <!-- ========================================== -->
+    <section id="tab-logs" class="hidden space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-guild-card/80 border border-guild-border rounded-2xl p-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-scroll text-emerald-400"></i>
+            <span>冒険の記録（達成済みミッション）</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">これまでにクリアしたミッションとレベルアップの軌跡です。</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="log-filter-job" onchange="renderLogs()" class="bg-guild-bg border border-guild-border text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500">
+            <option value="all">すべての職業</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="logs-list" class="space-y-3">
+        <!-- JSで動的に描画 -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- タブ3: PC・iPhoneデータ同期 ＆ 設定 -->
+    <!-- ========================================== -->
+    <section id="tab-settings" class="hidden space-y-6 max-w-3xl mx-auto">
+      
+      <!-- アカウント連携＆リアルタイム同期カード -->
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-5">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
+              <span>PC・iPhone クラウド同期</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+              同じアカウントでログインすると、iPhoneとPCで職業レベルやミッションがリアルタイムに同期されます。
+            </p>
+          </div>
+          <span id="auth-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+            ゲストモード
+          </span>
+        </div>
+
+        <!-- 現在のユーザー情報ボックス -->
+        <div class="bg-guild-bg/80 border border-guild-border rounded-xl p-4 space-y-2 text-xs sm:text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">同期ステータス:</span>
+            <span id="detail-sync-status" class="font-bold text-emerald-400">接続待機中</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span class="text-slate-400">冒険者ID (UID):</span>
+            <code id="user-uid-display" class="text-[11px] bg-slate-900 px-2 py-1 rounded text-amber-300 font-mono break-all select-all">---</code>
+          </div>
+          <div id="user-email-row" class="hidden flex items-center justify-between">
+            <span class="text-slate-400">連携メールアドレス:</span>
+            <span id="user-email-display" class="font-bold text-white"></span>
+          </div>
+        </div>
+
+        <!-- ログイン・アカウント紐づけフォーム（未連携時） -->
+        <div id="auth-forms-container" class="space-y-4 pt-2 border-t border-guild-border">
+          <p class="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            現在この端末のゲストデータとして保存されています。PCとiPhoneでデータを共有するには、下のボタンからGoogleまたはメールアドレスでログイン（紐づけ）してください。
+          </p>
+
+          <!-- Googleログインボタン -->
+          <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm flex items-center justify-center gap-2.5 shadow transition active:scale-95">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5" onerror="this.style.display='none'">
+            <span>Googleアカウントで連携・ログイン</span>
+          </button>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-guild-border"></div>
+            <span class="flex-shrink mx-3 text-xs text-slate-500">またはメールアドレスで連携</span>
+            <div class="flex-grow border-t border-guild-border"></div>
+          </div>
+
+          <!-- メール＆パスワードフォーム -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input type="email" id="auth-email" placeholder="メールアドレス" class="bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+            <input type="password" id="auth-password" placeholder="パスワード（6文字以上）" class="bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <button onclick="loginWithEmail()" class="flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm transition active:scale-95">
+              既存アカウントでログイン
+            </button>
+            <button onclick="registerWithEmail()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition active:scale-95">
+              新規アカウント登録（今のデータを引継）
+            </button>
+          </div>
+        </div>
+
+        <!-- ログアウトボタン（連携済み時） -->
+        <div id="auth-logged-in-actions" class="hidden pt-2 border-t border-guild-border flex justify-end">
+          <button onclick="logoutAccount()" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition">
+            <i class="fa-solid fa-right-from-bracket mr-1.5"></i>ログアウト（別のアカウントに切替）
+          </button>
+        </div>
+      </div>
+
+      <!-- iPhone ホーム画面追加ガイド -->
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-brands fa-apple text-slate-300 text-lg"></i>
+          <span>iPhoneでアプリのように使う方法</span>
+        </h3>
+        <ol class="text-xs sm:text-sm text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+          <li>iPhoneの <strong>Safari</strong> でこのページを開きます。</li>
+          <li>画面下部の共有ボタン（<i class="fa-solid fa-arrow-up-from-bracket text-sky-400"></i> 四角から上矢印のアイコン）をタップします。</li>
+          <li>メニューを下にスクロールして<strong>「ホーム画面に追加」</strong>をタップします。</li>
+          <li>ホーム画面のアイコンから起動すると、ブラウザの枠がない全画面アプリとして快適に動作します。</li>
+        </ol>
+      </div>
+
+      <!-- サウンド＆JSONバックアップ設定 -->
+      <div class="bg-guild-card border border-guild-border rounded-2xl p-5 sm:p-6 space-y-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-database text-amber-400"></i>
+          <span>サウンド設定 ＆ データバックアップ</span>
+        </h3>
+
+        <div class="flex items-center justify-between py-2 border-b border-guild-border">
+          <div>
+            <div class="text-sm font-bold text-white">レベルアップ効果音（ファンファーレ）</div>
+            <div class="text-xs text-slate-400">ミッション達成時にRPG風の電子音を鳴らします</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="sound-toggle" checked class="sr-only peer" onchange="toggleSoundSetting()">
+            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+
+        <div class="pt-1 space-y-3">
+          <p class="text-xs text-slate-400">万が一に備えて、全職業と達成履歴をJSONファイルとして保存・復元できます。</p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="exportDataJSON()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+              <i class="fa-solid fa-download text-amber-400"></i>
+              <span>JSONデータを書き出し</span>
+            </button>
+            <label class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-upload text-emerald-400"></i>
+              <span>JSONデータを読み込み</span>
+              <input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- スマホ用ボトムナビゲーションバー -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-guild-bg/95 backdrop-blur-lg border-t border-guild-border px-2 py-1.5 flex items-center justify-around">
+    <button onclick="switchTab('quests')" id="nav-sp-quests" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-amber-400 font-bold">
+      <i class="fa-solid fa-swords text-lg"></i>
+      <span class="text-[11px]">職業・クエスト</span>
+    </button>
+    <button onclick="switchTab('logs')" id="nav-sp-logs" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400">
+      <i class="fa-solid fa-scroll text-lg"></i>
+      <span class="text-[11px]">達成履歴</span>
+    </button>
+    <button onclick="switchTab('settings')" id="nav-sp-settings" class="sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400">
+      <i class="fa-solid fa-cloud text-lg"></i>
+      <span class="text-[11px]">同期・設定</span>
+    </button>
+  </nav>
+
+  <!-- モーダル1: 職業（ジャンル）の追加・編集 -->
+  <div id="job-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
+      <div class="flex items-center justify-between border-b border-guild-border pb-3">
+        <h3 id="job-modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-hat-wizard text-amber-400"></i>
+          <span>新しい職業を作成</span>
+        </h3>
+        <button onclick="closeJobModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="edit-job-id" />
+
+      <div class="space-y-4">
+        <!-- 職業名 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">職業名（ジャンル名） <span class="text-rose-400">*</span></label>
+          <input type="text" id="job-name-input" placeholder="例：エンジニア（賢者）、筋トレ（戦士）" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <!-- テーマカラー選択 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">テーマカラー</label>
+          <div id="color-picker-grid" class="grid grid-cols-6 gap-2">
+            <!-- JSで生成 -->
+          </div>
+        </div>
+
+        <!-- アイコン選択 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">ジョブアイコン</label>
+          <div id="icon-picker-grid" class="grid grid-cols-6 gap-2 max-h-36 overflow-y-auto p-1">
+            <!-- JSで生成 -->
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
+        <button onclick="closeJobModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition">
+          キャンセル
+        </button>
+        <button onclick="saveJob()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold shadow-lg shadow-amber-500/20 transition">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル2: ミッションの設定・編集 -->
+  <div id="mission-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 animate-pop-in shadow-2xl">
+      <div class="flex items-center justify-between border-b border-guild-border pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-scroll text-amber-400"></i>
+          <span id="mission-modal-job-title">ミッションを受注</span>
+        </h3>
+        <button onclick="closeMissionModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="mission-job-id" />
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">達成するミッション内容 <span class="text-rose-400">*</span></label>
+          <input type="text" id="mission-title-input" placeholder="例：Reactのチュートリアルを1章終える" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">報酬メモ・達成条件（任意）</label>
+          <textarea id="mission-memo-input" rows="2" placeholder="例：達成したらお気に入りのコーヒーを飲む！" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">目標期限（任意）</label>
+          <input type="date" id="mission-deadline-input" class="w-full bg-guild-bg border border-guild-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-guild-border">
+        <button onclick="closeMissionModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition">
+          キャンセル
+        </button>
+        <button onclick="saveMission()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold shadow-lg shadow-emerald-500/20 transition">
+          ミッションをセット
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル3: レベルアップ祝福演出 -->
+  <div id="levelup-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onclick="closeLevelUpModal()">
+    <div class="bg-gradient-to-b from-slate-900 to-guild-bg border-2 border-amber-400/80 rounded-3xl w-full max-w-sm p-6 sm:p-8 text-center space-y-5 animate-pop-in gold-glow relative overflow-hidden" onclick="event.stopPropagation()">
+
+      <!-- 背景の光輪 -->
+      <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-rpg font-bold tracking-widest uppercase">
+        <i class="fa-solid fa-sparkles"></i> MISSION CLEAR!
+      </div>
+
+      <div id="levelup-icon-box" class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-4xl text-amber-400 shadow-lg">
+        <i class="fa-solid fa-crown"></i>
+      </div>
+
+      <div>
+        <div id="levelup-job-name" class="text-sm font-bold text-slate-300">エンジニア（賢者）</div>
+        <h2 class="font-rpg font-extrabold text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-orange-400 mt-1">
+          LEVEL UP!
+        </h2>
+      </div>
+
+      <div class="flex items-center justify-center gap-4 py-2 bg-guild-bg/80 rounded-2xl border border-guild-border">
+        <span id="levelup-old-lv" class="font-rpg text-xl font-bold text-slate-400">Lv.1</span>
+        <i class="fa-solid fa-angles-right text-amber-400 animate-pulse"></i>
+        <span id="levelup-new-lv" class="font-rpg text-3xl font-extrabold text-amber-400">Lv.2</span>
+      </div>
+
+      <p id="levelup-mission-text" class="text-xs text-slate-300 bg-slate-800/60 rounded-xl p-3 border border-slate-700/60">
+        「ミッション名」を達成しました！
+      </p>
+
+      <button onclick="closeLevelUpModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition active:scale-95">
+        次のミッションへ進む
+      </button>
+    </div>
+  </div>
+
+  <!-- モーダル4: 削除確認ダイアログ（confirmの代替） -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-guild-card border border-guild-border rounded-2xl w-full max-w-sm p-5 space-y-4 animate-pop-in">
+      <h3 id="confirm-title" class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+        <span>確認</span>
+      </h3>
+      <p id="confirm-message" class="text-sm text-slate-300 leading-relaxed"></p>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">キャンセル</button>
+        <button id="confirm-exec-btn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">実行する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK & アプリケーションロジック -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      signInAnonymously, 
+      signInWithCustomToken, 
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
+      linkWithPopup,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      linkWithCredential,
+      EmailAuthProvider,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      onSnapshot, 
+      collection, 
+      addDoc, 
+      updateDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 1. グローバル状態・定数定義
+    const JOB_COLORS = [
+      { id: 'amber',   name: 'ゴールド',   hex: '#f59e0b', bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/40',   btn: 'bg-amber-500' },
+      { id: 'emerald', name: 'エメラルド', hex: '#10b981', bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/40', btn: 'bg-emerald-500' },
+      { id: 'sky',     name: 'サファイア', hex: '#0ea5e9', bg: 'bg-sky-500/15',     text: 'text-sky-400',     border: 'border-sky-500/40',     btn: 'bg-sky-500' },
+      { id: 'violet',  name: 'アメジスト', hex: '#8b5cf6', bg: 'bg-violet-500/15',  text: 'text-violet-400',  border: 'border-violet-500/40',  btn: 'bg-violet-500' },
+      { id: 'rose',    name: 'ルビー',     hex: '#f43f5e', bg: 'bg-rose-500/15',    text: 'text-rose-400',    border: 'border-rose-500/40',    btn: 'bg-rose-500' },
+      { id: 'orange',  name: 'ブレイズ',   hex: '#f97316', bg: 'bg-orange-500/15',  text: 'text-orange-400',  border: 'border-orange-500/40',  btn: 'bg-orange-500' }
+    ];
+
+    const JOB_ICONS = [
+      'fa-hat-wizard', 'fa-dumbbell', 'fa-music', 'fa-code', 'fa-book-open', 'fa-paintbrush',
+      'fa-shield-halved', 'fa-dragon', 'fa-fire', 'fa-brain', 'fa-coins', 'fa-heart-pulse',
+      'fa-language', 'fa-camera', 'fa-utensils', 'fa-person-running', 'fa-chess-knight', 'fa-compass'
+    ];
+
+    // アプリ状態
+    const state = {
+      user: null,
+      jobs: [],
+      logs: [],
+      selectedColor: 'amber',
+      selectedIcon: 'fa-hat-wizard',
+      soundEnabled: true,
+      unsubJobs: null,
+      unsubLogs: null
+    };
+
+    // Firebase初期化
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'task-rpg-default';
+    let app = null;
+    let auth = null;
+    let db = null;
+
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyD0Jr6ubMI_l7FYCK4QoI5vyQC_gHUMz9w",
+        authDomain: "taskrpgapp.firebaseapp.com",
+        projectId: "taskrpgapp",
+        storageBucket: "taskrpgapp.firebasestorage.app",
+        messagingSenderId: "295517186056",
+        appId: "1:295517186056:web:61ec357e5f51ef40b189bd",
+        measurementId: "G-PNDVBGX67S"
+      };
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (err) {
+      console.error('Firebase init error:', err);
+      updateSyncUI('error', '接続エラー');
+    }
+
+    // 2. 認証＆Firestoreリアルタイム同期
+    async function initAuth() {
+      if (!auth) return;
+
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else if (!auth.currentUser) {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error('Auth error:', err);
+        showToast('認証の初期化に失敗しました', 'error');
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        state.user = user;
+        updateAuthUI(user);
+
+        if (state.unsubJobs) { state.unsubJobs(); state.unsubJobs = null; }
+        if (state.unsubLogs) { state.unsubLogs(); state.unsubLogs = null; }
+
+        if (user) {
+          subscribeUserData(user.uid);
+        } else {
+          state.jobs = [];
+          state.logs = [];
+          renderAll();
+        }
+      });
+    }
+
+    function subscribeUserData(uid) {
+      if (!db || !uid) return;
+      updateSyncUI('syncing', '同期中...');
+
+      const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+      const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
+
+      state.unsubJobs = onSnapshot(jobsCol, (snapshot) => {
+        const list = [];
+        snapshot.forEach((docSnap) => {
+          list.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        state.jobs = list;
+        updateSyncUI('synced', 'クラウド同期済');
+        renderAll();
+      }, (error) => {
+        console.error('Jobs snapshot error:', error);
+        updateSyncUI('error', '同期エラー');
+      });
+
+      state.unsubLogs = onSnapshot(logsCol, (snapshot) => {
+        const list = [];
+        snapshot.forEach((docSnap) => {
+          list.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        list.sort((a, b) => (b.clearedAt || 0) - (a.clearedAt || 0));
+        state.logs = list;
+        renderAll();
+      }, (error) => {
+        console.error('Logs snapshot error:', error);
+      });
+    }
+
+    // 3. アカウント連携（Google / Email）
+    window.loginWithGoogle = async function() {
+      if (!auth) return showToast('Firebaseが設定されていません', 'error');
+      const provider = new GoogleAuthProvider();
+      try {
+        if (auth.currentUser && auth.currentUser.isAnonymous) {
+          try {
+            await linkWithPopup(auth.currentUser, provider);
+            showToast('Googleアカウントと連携しました！', 'success');
+            return;
+          } catch (linkErr) {
+            if (linkErr.code === 'auth/credential-already-in-use') {
+              await signInWithPopup(auth, provider);
+              showToast('既存のGoogleアカウントにログインしました！', 'success');
+              return;
+            }
+            throw linkErr;
+          }
+        } else {
+          await signInWithPopup(auth, provider);
+          showToast('Googleアカウントでログインしました！', 'success');
+        }
+      } catch (err) {
+        console.error('Google login error:', err);
+        showToast('Googleログインに失敗しました: ' + (err.message || ''), 'error');
+      }
+    };
+
+    window.registerWithEmail = async function() {
+      if (!auth) return;
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (!email || password.length < 6) {
+        return showToast('メールアドレスと6文字以上のパスワードを入力してください', 'error');
+      }
+      try {
+        if (auth.currentUser && auth.currentUser.isAnonymous) {
+          const credential = EmailAuthProvider.credential(email, password);
+          await linkWithCredential(auth.currentUser, credential);
+          showToast('アカウント登録完了！現在のデータを引き継ぎました', 'success');
+        } else {
+          await createUserWithEmailAndPassword(auth, email, password);
+          showToast('新規アカウントを登録しました！', 'success');
+        }
+      } catch (err) {
+        console.error('Email register error:', err);
+        showToast('登録エラー: ' + err.message, 'error');
+      }
+    };
+
+    window.loginWithEmail = async function() {
+      if (!auth) return;
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      if (!email || !password) {
+        return showToast('メールアドレスとパスワードを入力してください', 'error');
+      }
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        showToast('ログインしました！データを同期します', 'success');
+      } catch (err) {
+        console.error('Email login error:', err);
+        showToast('ログイン失敗: メールかパスワードを確認してください', 'error');
+      }
+    };
+
+    window.logoutAccount = async function() {
+      if (!auth) return;
+      try {
+        await signOut(auth);
+        await signInAnonymously(auth);
+        showToast('ログアウトしました（ゲストモード）', 'info');
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+    };
+
+    // 4. 職業（ジャンル）CRUD操作
+    window.openJobModal = function(jobId = null) {
+      const modal = document.getElementById('job-modal');
+      const titleEl = document.getElementById('job-modal-title');
+      const idInput = document.getElementById('edit-job-id');
+      const nameInput = document.getElementById('job-name-input');
+
+      if (jobId) {
+        const job = state.jobs.find(j => j.id === jobId);
+        if (!job) return;
+        titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-400"></i><span>職業を編集</span>';
+        idInput.value = job.id;
+        nameInput.value = job.name;
+        state.selectedColor = job.colorId || 'amber';
+        state.selectedIcon = job.icon || 'fa-hat-wizard';
+      } else {
+        titleEl.innerHTML = '<i class="fa-solid fa-hat-wizard text-amber-400"></i><span>新しい職業を作成</span>';
+        idInput.value = '';
+        nameInput.value = '';
+        state.selectedColor = 'amber';
+        state.selectedIcon = 'fa-hat-wizard';
+      }
+
+      renderPickers();
+      modal.classList.remove('hidden');
+      setTimeout(() => nameInput.focus(), 50);
+    };
+
+    window.closeJobModal = function() {
+      document.getElementById('job-modal').classList.add('hidden');
+    };
+
+    window.saveJob = async function() {
+      if (!state.user || !db) return showToast('データベースに接続されていません', 'error');
+      const id = document.getElementById('edit-job-id').value;
+      const name = document.getElementById('job-name-input').value.trim();
+
+      if (!name) {
+        return showToast('職業名を入力してください', 'error');
+      }
+
+      const uid = state.user.uid;
+      try {
+        if (id) {
+          const jobRef = doc(db, 'artifacts', appId, 'users', uid, 'jobs', id);
+          await updateDoc(jobRef, {
+            name: name,
+            colorId: state.selectedColor,
+            icon: state.selectedIcon
+          });
+          showToast(`「${name}」を更新しました`, 'success');
+        } else {
+          const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+          await addDoc(jobsCol, {
+            name: name,
+            colorId: state.selectedColor,
+            icon: state.selectedIcon,
+            level: 1,
+            currentMission: null,
+            createdAt: Date.now()
+          });
+          showToast(`新職業「${name}」が誕生しました！`, 'success');
+        }
+        closeJobModal();
+      } catch (err) {
+        console.error('Save job error:', err);
+        showToast('保存に失敗しました', 'error');
+      }
+    };
+
+    window.confirmDeleteJob = function(jobId) {
+      const job = state.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      openConfirmModal(
+        '職業の削除',
+        `「${job.name}（Lv.${job.level}）」を削除しますか？現在設定中のミッションも削除されます。（過去の達成履歴は残ります）`,
+        async () => {
+          if (!state.user || !db) return;
+          try {
+            const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
+            await deleteDoc(jobRef);
+            showToast(`「${job.name}」を削除しました`, 'info');
+          } catch (err) {
+            console.error('Delete job error:', err);
+            showToast('削除に失敗しました', 'error');
+          }
+        }
+      );
+    };
+
+    window.addPresetJobs = async function() {
+      if (!state.user || !db) return;
+      const presets = [
+        { name: 'エンジニア（賢者）', icon: 'fa-code', colorId: 'sky', mission: '技術書を15ページ読む' },
+        { name: '筋トレ（戦士）', icon: 'fa-dumbbell', colorId: 'rose', mission: '腕立て伏せ30回＆スクワット30回' },
+        { name: '音楽（吟遊詩人）', icon: 'fa-music', colorId: 'emerald', mission: '好きな曲のワンフレーズを練習する' }
+      ];
+
+      const uid = state.user.uid;
+      const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+      const now = Date.now();
+
+      try {
+        for (let i = 0; i < presets.length; i++) {
+          const p = presets[i];
+          await addDoc(jobsCol, {
+            name: p.name,
+            icon: p.icon,
+            colorId: p.colorId,
+            level: 1,
+            currentMission: {
+              title: p.mission,
+              memo: 'まずは最初のクエストをクリアしよう！',
+              deadline: '',
+              createdAt: now + i
+            },
+            createdAt: now + i
+          });
+        }
+        showToast('サンプル職業3種を追加しました！', 'success');
+      } catch (err) {
+        console.error('Preset error:', err);
+        showToast('追加に失敗しました', 'error');
+      }
+    };
+
+    // 5. ミッション設定 ＆ 達成（レベルアップ）
+    window.openMissionModal = function(jobId) {
+      const job = state.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      document.getElementById('mission-job-id').value = job.id;
+      document.getElementById('mission-modal-job-title').textContent = `${job.name} のミッション`;
+
+      const titleInput = document.getElementById('mission-title-input');
+      const memoInput = document.getElementById('mission-memo-input');
+      const deadlineInput = document.getElementById('mission-deadline-input');
+
+      if (job.currentMission) {
+        titleInput.value = job.currentMission.title || '';
+        memoInput.value = job.currentMission.memo || '';
+        deadlineInput.value = job.currentMission.deadline || '';
+      } else {
+        titleInput.value = '';
+        memoInput.value = '';
+        deadlineInput.value = '';
+      }
+
+      document.getElementById('mission-modal').classList.remove('hidden');
+      setTimeout(() => titleInput.focus(), 50);
+    };
+
+    window.closeMissionModal = function() {
+      document.getElementById('mission-modal').classList.add('hidden');
+    };
+
+    window.saveMission = async function() {
+      if (!state.user || !db) return;
+      const jobId = document.getElementById('mission-job-id').value;
+      const title = document.getElementById('mission-title-input').value.trim();
+      const memo = document.getElementById('mission-memo-input').value.trim();
+      const deadline = document.getElementById('mission-deadline-input').value;
+
+      if (!title) {
+        return showToast('ミッション内容を入力してください', 'error');
+      }
+
+      try {
+        const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
+        await updateDoc(jobRef, {
+          currentMission: {
+            title,
+            memo,
+            deadline,
+            createdAt: Date.now()
+          }
+        });
+        closeMissionModal();
+        showToast('新しいミッションを受注しました！', 'success');
+      } catch (err) {
+        console.error('Save mission error:', err);
+        showToast('ミッションの保存に失敗しました', 'error');
+      }
+    };
+
+    window.quickSetMission = async function(event, jobId) {
+      event.preventDefault();
+      if (!state.user || !db) return;
+      const input = document.getElementById(`quick-input-${jobId}`);
+      const title = input ? input.value.trim() : '';
+      if (!title) {
+        return showToast('ミッション名を入力してください', 'error');
+      }
+
+      try {
+        const jobRef = doc(db, 'artifacts', appId, 'users', state.user.uid, 'jobs', jobId);
+        await updateDoc(jobRef, {
+          currentMission: {
+            title,
+            memo: '',
+            deadline: '',
+            createdAt: Date.now()
+          }
+        });
+        showToast('ミッションを受注しました！', 'success');
+      } catch (err) {
+        console.error('Quick mission error:', err);
+      }
+    };
+
+    window.completeMission = async function(jobId) {
+      if (!state.user || !db) return;
+      const job = state.jobs.find(j => j.id === jobId);
+      if (!job || !job.currentMission) return;
+
+      const uid = state.user.uid;
+      const oldLevel = Number(job.level) || 1;
+      const newLevel = oldLevel + 1;
+      const clearedMissionTitle = job.currentMission.title;
+
+      try {
+        const jobRef = doc(db, 'artifacts', appId, 'users', uid, 'jobs', jobId);
+        await updateDoc(jobRef, {
+          level: newLevel,
+          currentMission: null
+        });
+
+        const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
+        await addDoc(logsCol, {
+          jobId: job.id,
+          jobName: job.name,
+          jobIcon: job.icon,
+          jobColorId: job.colorId,
+          missionTitle: clearedMissionTitle,
+          newLevel: newLevel,
+          clearedAt: Date.now()
+        });
+
+        triggerLevelUpCelebration(job, oldLevel, newLevel, clearedMissionTitle);
+
+      } catch (err) {
+        console.error('Complete mission error:', err);
+        showToast('達成処理中にエラーが発生しました', 'error');
+      }
+    };
+
+    // 6. レベルアップ祝福エフェクト ＆ サウンド
+    function triggerLevelUpCelebration(job, oldLv, newLv, missionTitle) {
+      const colorObj = JOB_COLORS.find(c => c.id === job.colorId) || JOB_COLORS[0];
+
+      const iconBox = document.getElementById('levelup-icon-box');
+      iconBox.className = `w-20 h-20 mx-auto rounded-2xl ${colorObj.bg} border-2 ${colorObj.border} flex items-center justify-center text-4xl ${colorObj.text} shadow-lg`;
+      iconBox.innerHTML = `<i class="fa-solid ${job.icon}"></i>`;
+
+      document.getElementById('levelup-job-name').textContent = job.name;
+      document.getElementById('levelup-old-lv').textContent = `Lv.${oldLv}`;
+      document.getElementById('levelup-new-lv').textContent = `Lv.${newLv}`;
+      document.getElementById('levelup-mission-text').textContent = `「${missionTitle}」を達成しました！`;
+
+      document.getElementById('levelup-modal').classList.remove('hidden');
+
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#f59e0b', '#10b981', '#38bdf8', '#fde68a']
+        });
+      }
+
+      if (state.soundEnabled && typeof Tone !== 'undefined') {
+        try {
+          Tone.start();
+          const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.6 }
+          }).toDestination();
+          synth.volume.value = -8;
+          const now = Tone.now();
+          synth.triggerAttackRelease('C5', '16n', now);
+          synth.triggerAttackRelease('E5', '16n', now + 0.1);
+          synth.triggerAttackRelease('G5', '16n', now + 0.2);
+          synth.triggerAttackRelease(['C6', 'E6'], '4n', now + 0.32);
+        } catch (e) {
+          // 音声再生制限時は無視
+        }
+      }
+    }
+
+    window.closeLevelUpModal = function() {
+      document.getElementById('levelup-modal').classList.add('hidden');
+    };
+
+    window.toggleSoundSetting = function() {
+      state.soundEnabled = document.getElementById('sound-toggle').checked;
+    };
+
+    // 7. JSONエクスポート・インポート機能
+    window.exportDataJSON = function() {
+      const data = {
+        appName: 'タスクRPG',
+        exportedAt: new Date().toISOString(),
+        jobs: state.jobs,
+        logs: state.logs
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `task-rpg-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('バックアップJSONをダウンロードしました', 'success');
+    };
+
+    window.importDataJSON = function(event) {
+      const file = event.target.files[0];
+      if (!file || !state.user || !db) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed.jobs)) {
+            throw new Error('無効なバックアップ形式です');
+          }
+
+          const uid = state.user.uid;
+          const jobsCol = collection(db, 'artifacts', appId, 'users', uid, 'jobs');
+          const logsCol = collection(db, 'artifacts', appId, 'users', uid, 'questLogs');
+
+          for (const j of parsed.jobs) {
+            await addDoc(jobsCol, {
+              name: j.name || '無題の職業',
+              icon: j.icon || 'fa-hat-wizard',
+              colorId: j.colorId || 'amber',
+              level: Number(j.level) || 1,
+              currentMission: j.currentMission || null,
+              createdAt: j.createdAt || Date.now()
+            });
+          }
+
+          if (Array.isArray(parsed.logs)) {
+            for (const l of parsed.logs) {
+              await addDoc(logsCol, {
+                jobId: l.jobId || '',
+                jobName: l.jobName || '',
+                jobIcon: l.jobIcon || 'fa-hat-wizard',
+                jobColorId: l.jobColorId || 'amber',
+                missionTitle: l.missionTitle || '',
+                newLevel: Number(l.newLevel) || 2,
+                clearedAt: l.clearedAt || Date.now()
+              });
+            }
+          }
+
+          showToast(`${parsed.jobs.length}件の職業データを復元しました！`, 'success');
+        } catch (err) {
+          console.error('Import error:', err);
+          showToast('JSONの読み込みに失敗しました', 'error');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    };
+
+    // 8. UIレンダリング関数群
+    function renderAll() {
+      renderHeaderStats();
+      renderJobsGrid();
+      renderLogFilterOptions();
+      renderLogs();
+    }
+
+    function renderHeaderStats() {
+      const totalLevel = state.jobs.reduce((sum, j) => sum + (Number(j.level) || 1), 0);
+      const displayTotal = state.jobs.length > 0 ? totalLevel : 1;
+      const clearedCount = state.logs.length;
+
+      document.getElementById('total-level-display').textContent = `Lv.${displayTotal}`;
+      document.getElementById('total-cleared-display').textContent = `${clearedCount}件`;
+
+      let rankTitle = '見習い冒険者';
+      if (displayTotal >= 100) rankTitle = '伝説の英雄';
+      else if (displayTotal >= 50) rankTitle = 'S級マスター';
+      else if (displayTotal >= 30) rankTitle = 'A級熟練冒険者';
+      else if (displayTotal >= 15) rankTitle = 'B級中堅冒険者';
+      else if (displayTotal >= 5) rankTitle = 'C級駆け出し冒険者';
+
+      document.getElementById('adventurer-rank-badge').textContent = rankTitle;
+    }
+
+    function renderJobsGrid() {
+      const grid = document.getElementById('jobs-grid');
+      const emptyBanner = document.getElementById('empty-jobs-banner');
+
+      if (state.jobs.length === 0) {
+        grid.innerHTML = '';
+        emptyBanner.classList.remove('hidden');
+        return;
+      }
+
+      emptyBanner.classList.add('hidden');
+      grid.innerHTML = state.jobs.map(job => {
+        const c = JOB_COLORS.find(col => col.id === job.colorId) || JOB_COLORS[0];
+        const hasMission = job.currentMission && job.currentMission.title;
+
+        let missionBlock = '';
+        if (hasMission) {
+          const m = job.currentMission;
+          const deadlineBadge = m.deadline 
+            ? `<span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700"><i class="fa-regular fa-calendar"></i>${escapeHtml(m.deadline)}</span>` 
+            : '';
+          const memoText = m.memo 
+            ? `<p class="text-xs text-slate-400 mt-1.5 line-clamp-2"><i class="fa-solid fa-gift text-amber-400/80 mr-1"></i>${escapeHtml(m.memo)}</p>` 
+            : '';
+
+          missionBlock = `
+            <div class="flex-1 flex flex-col justify-between bg-guild-bg/90 border border-guild-border rounded-xl p-4 space-y-4">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="text-[11px] font-bold tracking-wider uppercase ${c.text} flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full ${c.btn} animate-ping"></span>
+                    挑戦中のミッション
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    ${deadlineBadge}
+                    <button onclick="openMissionModal('${job.id}')" title="ミッションを編集" class="w-7 h-7 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </div>
+                </div>
+                <h4 class="text-base font-bold text-white leading-snug break-words">
+                  ${escapeHtml(m.title)}
+                </h4>
+                ${memoText}
+              </div>
+
+              <button onclick="completeMission('${job.id}')" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-check text-base"></i>
+                <span>ミッション達成！（Lv.${Number(job.level) + 1}へ）</span>
+              </button>
+            </div>
+          `;
+        } else {
+          missionBlock = `
+            <div class="flex-1 flex flex-col justify-between bg-guild-bg/50 border border-dashed border-guild-border rounded-xl p-4 space-y-3">
+              <div class="text-center py-2">
+                <span class="text-xs font-bold text-slate-400">現在受注中のミッションはありません</span>
+              </div>
+              <form onsubmit="quickSetMission(event, '${job.id}')" class="space-y-2">
+                <div class="flex gap-1.5">
+                  <input type="text" id="quick-input-${job.id}" placeholder="新しいミッションを入力..." class="flex-1 min-w-0 bg-guild-bg border border-guild-border rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500" />
+                  <button type="submit" class="px-3.5 py-2 rounded-xl ${c.btn} text-slate-950 font-bold text-xs whitespace-nowrap hover:opacity-90 transition active:scale-95">
+                    受注
+                  </button>
+                </div>
+                <button type="button" onclick="openMissionModal('${job.id}')" class="w-full py-1.5 text-[11px] text-slate-400 hover:text-amber-300 transition flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-sliders"></i><span>メモや期限つきで詳しく設定する</span>
+                </button>
+              </form>
+            </div>
+          `;
+        }
+
+        return `
+          <article class="bg-guild-card hover:bg-guild-cardHover/80 border border-guild-border rounded-2xl p-5 flex flex-col gap-4 transition-all shadow-lg">
+            <!-- カード上部：アイコン・職業名・レベルバッジ -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center text-xl ${c.text} flex-shrink-0">
+                  <i class="fa-solid ${job.icon}"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-bold text-base sm:text-lg text-white truncate">${escapeHtml(job.name)}</h3>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="font-rpg font-extrabold text-sm sm:text-base ${c.text}">Lv.${job.level}</span>
+                    <span class="text-[11px] text-slate-500">達成: ${Number(job.level) - 1}回</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 職業編集・削除メニュー -->
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <button onclick="openJobModal('${job.id}')" title="職業を編集" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition">
+                  <i class="fa-solid fa-gear text-xs"></i>
+                </button>
+                <button onclick="confirmDeleteJob('${job.id}')" title="職業を削除" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 経験値バー風装飾（1ミッション＝1レベルアップを表現） -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>NEXT LEVEL</span>
+                <span>あと 1 ミッション達成で Lv.${Number(job.level) + 1}</span>
+              </div>
+              <div class="w-full h-1.5 bg-guild-bg rounded-full overflow-hidden border border-guild-border/60">
+                <div class="h-full ${c.btn} transition-all duration-500 ${hasMission ? 'w-1/2 opacity-90' : 'w-1/12 opacity-40'}"></div>
+              </div>
+            </div>
+
+            <!-- ミッション枠 -->
+            ${missionBlock}
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderLogFilterOptions() {
+      const select = document.getElementById('log-filter-job');
+      const currentVal = select.value;
+      const options = ['<option value="all">すべての職業</option>'];
+      state.jobs.forEach(j => {
+        options.push(`<option value="${j.id}">${escapeHtml(j.name)} (Lv.${j.level})</option>`);
+      });
+      select.innerHTML = options.join('');
+      if (state.jobs.some(j => j.id === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+
+    window.renderLogs = function() {
+      const container = document.getElementById('logs-list');
+      const filterJobId = document.getElementById('log-filter-job').value;
+
+      const filtered = filterJobId === 'all' 
+        ? state.logs 
+        : state.logs.filter(l => l.jobId === filterJobId);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-guild-card border border-guild-border rounded-2xl p-8 text-center text-slate-400 text-sm">
+            <i class="fa-solid fa-scroll text-3xl text-slate-600 mb-2 block"></i>
+            まだ達成記録がありません。ミッションをクリアして歴史を刻みましょう！
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(log => {
+        const c = JOB_COLORS.find(col => col.id === log.jobColorId) || JOB_COLORS[0];
+        const dateStr = formatDateTime(log.clearedAt);
+
+        return `
+          <div class="bg-guild-card border border-guild-border rounded-xl p-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center ${c.text} flex-shrink-0">
+                <i class="fa-solid ${log.jobIcon || 'fa-hat-wizard'}"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold ${c.text}">${escapeHtml(log.jobName)}</span>
+                  <span class="text-[11px] font-rpg font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    Lv.${log.newLevel} 到達!
+                  </span>
+                </div>
+                <p class="text-sm font-bold text-white truncate mt-0.5">${escapeHtml(log.missionTitle)}</p>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <span class="text-[11px] text-slate-400 block">${dateStr}</span>
+              <span class="text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-check mr-0.5"></i>CLEAR</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    function renderPickers() {
+      const colorGrid = document.getElementById('color-picker-grid');
+      colorGrid.innerHTML = JOB_COLORS.map(c => {
+        const selected = state.selectedColor === c.id;
+        return `
+          <button type="button" onclick="selectJobColor('${c.id}')" class="h-9 rounded-xl ${c.btn} flex items-center justify-center text-slate-950 transition ${selected ? 'ring-2 ring-white scale-105' : 'opacity-70 hover:opacity-100'}">
+            ${selected ? '<i class="fa-solid fa-check text-xs font-bold"></i>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      const iconGrid = document.getElementById('icon-picker-grid');
+      iconGrid.innerHTML = JOB_ICONS.map(icon => {
+        const selected = state.selectedIcon === icon;
+        return `
+          <button type="button" onclick="selectJobIcon('${icon}')" class="h-10 rounded-xl border flex items-center justify-center text-base transition ${selected ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-guild-bg border-guild-border text-slate-400 hover:text-white'}">
+            <i class="fa-solid ${icon}"></i>
+          </button>
+        `;
+      }).join('');
+    }
+
+    window.selectJobColor = function(colorId) {
+      state.selectedColor = colorId;
+      renderPickers();
+    };
+
+    window.selectJobIcon = function(icon) {
+      state.selectedIcon = icon;
+      renderPickers();
+    };
+
+    // 9. タブ切り替え ＆ UIヘルパー
+    window.switchTab = function(tabName) {
+      ['quests', 'logs', 'settings'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        if (sec) sec.classList.toggle('hidden', t !== tabName);
+
+        const pcBtn = document.getElementById(`nav-pc-${t}`);
+        if (pcBtn) {
+          if (t === tabName) {
+            pcBtn.className = 'pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold transition-all bg-amber-500 text-slate-950 shadow';
+          } else {
+            pcBtn.className = 'pc-nav-btn px-4 py-2 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition-all';
+          }
+        }
+
+        const spBtn = document.getElementById(`nav-sp-${t}`);
+        if (spBtn) {
+          if (t === tabName) {
+            spBtn.className = 'sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-amber-400 font-bold';
+          } else {
+            spBtn.className = 'sp-nav-btn flex-1 py-2 flex flex-col items-center justify-center gap-1 text-slate-400';
+          }
+        }
+      });
+    };
+
+    function updateSyncUI(status, text) {
+      const dot = document.getElementById('sync-dot');
+      const label = document.getElementById('sync-status-text');
+      const detail = document.getElementById('detail-sync-status');
+
+      label.textContent = text;
+      if (detail) detail.textContent = text;
+
+      if (status === 'synced') {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      } else if (status === 'syncing') {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+      }
+    }
+
+    function updateAuthUI(user) {
+      const uidEl = document.getElementById('user-uid-display');
+      const badgeEl = document.getElementById('auth-badge');
+      const emailRow = document.getElementById('user-email-row');
+      const emailEl = document.getElementById('user-email-display');
+      const formsBox = document.getElementById('auth-forms-container');
+      const logoutBox = document.getElementById('auth-logged-in-actions');
+
+      if (!user) {
+        uidEl.textContent = '未接続';
+        return;
+      }
+
+      uidEl.textContent = user.uid;
+
+      if (user.isAnonymous) {
+        badgeEl.textContent = 'ゲストモード（端末固有）';
+        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30';
+        emailRow.classList.add('hidden');
+        formsBox.classList.remove('hidden');
+        logoutBox.classList.add('hidden');
+      } else {
+        badgeEl.textContent = 'アカウント連携済';
+        badgeEl.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        emailRow.classList.remove('hidden');
+        emailEl.textContent = user.email || 'Googleアカウント';
+        formsBox.classList.add('hidden');
+        logoutBox.classList.remove('hidden');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const styles = {
+        success: 'bg-emerald-950/95 border-emerald-500/60 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500/60 text-rose-200',
+        info: 'bg-slate-900/95 border-amber-500/50 text-amber-200'
+      };
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-exclamation text-rose-400',
+        info: 'fa-sparkles text-amber-400'
+      };
+
+      toast.className = `pointer-events-auto border rounded-xl px-4 py-3 shadow-xl backdrop-blur-md flex items-center gap-2.5 text-xs sm:text-sm font-bold animate-pop-in ${styles[type] || styles.info}`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-6px)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+
+    let confirmCallback = null;
+    function openConfirmModal(title, message, onConfirm) {
+      document.getElementById('confirm-title').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i><span>${escapeHtml(title)}</span>`;
+      document.getElementById('confirm-message').textContent = message;
+      confirmCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    window.closeConfirmModal = function() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      confirmCallback = null;
+    };
+
+    document.getElementById('confirm-exec-btn').addEventListener('click', async () => {
+      if (confirmCallback) {
+        await confirmCallback();
+      }
+      closeConfirmModal();
+    });
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatDateTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${y}/${m}/${day} ${hh}:${mm}`;
+    }
+
+    // アプリ起動
+    initAuth();
+  </script>
+
+</body>
+</html>
